@@ -466,7 +466,7 @@ char * GetGSMReply(int extra,const char* find,int gap,const char* LineEnd,const 
 			}
 			gsmER=0;
 		}else{gsmER++;
-		if(gsmER>9)RestartGSM();
+		if(gsmER>9){RestartGSM();restartGSMuart();gsmER=0;}
 		}
 
 
@@ -787,7 +787,7 @@ void SendTCPdata(char* data){
 			Debug_Tx("CONNECTING TO SEND");
 			ck=ck-1;
 			SendGSMCode(" AT+QISEND=0");
-			gprsok=strlen(GetGSMReply(0,"",0,"","Error: AT+QISEND Send TCP data input",2000,">"));
+			gprsok=strlen(GetGSMReply(0,"",0,"","Error: AT+QISEND Send TCP data input1",4000,">"));
 		}
 		if(gprsok>0){
 			ck=1;
