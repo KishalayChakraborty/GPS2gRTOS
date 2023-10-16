@@ -29,7 +29,8 @@ extern void restartGSMuart(void);
 
 extern int tic(void);
 extern void toc(int tc, char Message[]);
-
+void SendTCPdata();
+void ResetTCP();
 char GSMInData[1000];
 char GSMData[1500];
 char GSMDData[3001];
@@ -45,13 +46,13 @@ char GSMTXD[300];
 int dnlfile=0;
 
 char gsminfo[80];
-
+int gsmER=0;
 char GSMReply[100];
 
 #include <errno.h>
 int errorlen=0;
 float GSMSignal=0;
-int gpsto_net=75000;
+int gpsto_net= 75000;
 int gpsto_dev=400;
 
 char SS0[4],MCC0[5],MNC0[5],LAC0[6],CID0[6];
@@ -62,8 +63,8 @@ char SS4[4],LAC4[6],CID4[6];
 int GSMProf=1;
 int FTPdnS=0;
 
-char ip[]="20.210.207.21\",5001";//34.74.249.18\",300";
-char ip2[]="20.210.207.21\",5001";//"216.10.242.75\",6507"; //  "216.10.243.86\",6055";
+char ip[]=  "216.10.242.75\",6507"; // "20.210.207.21\",5001";//34.74.249.18\",300";216.10.242.75,PORT1-6507
+char ip2[]=  "216.10.242.75\",6507"; // SS"20.210.207.21\",5001";//"216.10.242.75\",6507"; //  "216.10.243.86\",6055";
  // and port 
 
 int ServerConnected=0;
@@ -463,6 +464,9 @@ char * GetGSMReply(int extra,const char* find,int gap,const char* LineEnd,const 
 				}
 
 			}
+			gsmER=0;
+		}else{gsmER++;
+		if(gsmER>9)RestartGSM();
 		}
 
 
@@ -501,9 +505,11 @@ int GSMSigQuality(){
 	else{
 		Debug_Tx("GSM low");
 		Debug_Tx("GSM No Signal");
-
-		Debug_Tx(GSMData);
+		gprsok=0;
 		ServerConnected=0;
+		if(0)		RestartGSM();
+		restartGSMuart();
+		Debug_Tx("GSMTRstarted");
 		SET_LED_NET(0);
 	}
 	return(GSMSignal);//must be higher than 5 ,range 0-33
@@ -514,7 +520,7 @@ int GSMSigQuality(){
 char* GSMSimOperator(){
 
 	SendGSMCode("  AT+COPS?");
-	return(GetGSMReply(0,"+COPS:",12,"\"","Error: AT+COPS? sim operator error",gpsto_net,"OK"));
+	return(GetGSMReply(0,"+COPS:",12,"\"","Error: AT+COPS? sim operator error",5000,"OK"));
 
 }
 char* GSMSimOperator_test(){
@@ -733,7 +739,7 @@ void StartTCPConnection(){
 
 	}
 	HAL_Delay(1500);
-
+	SendTCPdata(data_LOGIN);
 	/*
 	if(strlen(ip2)>4){
 		memset(GSMDataC,0,100);
@@ -778,11 +784,10 @@ void SendTCPdata(char* data){
 		ck=1;
 		gprsok=0;
 		while((ck>0) && (gprsok<1)){
-
 			Debug_Tx("CONNECTING TO SEND");
 			ck=ck-1;
 			SendGSMCode(" AT+QISEND=0");
-			gprsok=strlen(GetGSMReply(0,"",0,"","Error: AT+QISEND Send TCP data input",gpsto_dev,">"));
+			gprsok=strlen(GetGSMReply(0,"",0,"","Error: AT+QISEND Send TCP data input",2000,">"));
 		}
 		if(gprsok>0){
 			ck=1;
@@ -796,6 +801,7 @@ void SendTCPdata(char* data){
 
 			}
 		}
+		else{SendGSMData("    ");Debug_Tx("UNABLE TO SEND DATA STOPED CONNECTion");Debug_Tx(data);}
 		}
 		if(strlen(ip2)>44)
 		{
@@ -817,6 +823,10 @@ void SendTCPdata(char* data){
 			}
 		}
 		}
+	}
+	else{
+		Debug_Tx("DISCONNECTED FROM SERVER .resetting connection ");
+		ResetTCP();
 	}
 }
 
@@ -919,7 +929,7 @@ char* GSMCellInfo(){
 
 
 	memset(gsminfo,0,80);
-	sprintf(gsminfo, "%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",(int)GSMSignal,MCC0,MNC0,LAC0,CID0,CID1,LAC1,SS1,CID2,LAC2,SS2,CID3,LAC3,SS3,CID4,LAC4,SS4);
+	sprintf(gsminfo, "%2d,%4s,%4s,%4s,%4s,%4s,%4s,%4s,%4s,%4s,%4s,%4s,%4s,%4s,%4s,%4s,%4s",(int)GSMSignal,MCC0,MNC0,LAC0,CID0,CID1,LAC1,SS1,CID2,LAC2,SS2,CID3,LAC3,SS3,CID4,LAC4,SS4);
 	//Debug_Tx(gsminfo);
 
 	return(gsminfo);

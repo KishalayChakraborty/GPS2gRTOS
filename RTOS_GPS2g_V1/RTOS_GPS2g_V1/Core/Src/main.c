@@ -868,8 +868,9 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 		if(DMAon==1){
 		//Debug_Tx("GSMErr");
 		GSMBuff[0]=0;
-    	__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
-    	HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
+		__HAL_UART_CLEAR_IT(&huart1, UART_CLEAR_NEF|UART_CLEAR_OREF);
+		__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
+			    	HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
 		}
 	}
 
@@ -896,64 +897,39 @@ void StartDefaultTask(void *argument)
 
 
 	 // TestDigitalOutput();
+initAcc();
+//TestDigitalOutput();
+SET_GPS_VCC_EN(1);
+SET_GSM_VCC_EN(1);
+SET_PWRKEY(1);
+Init_ADC();
+SET_5V_OUT_EN(1);
+SET_GPS_VCC_EN(1);
+SET_GSM_VCC_EN(1);
+SET_PWRKEY(1);
+GSMBuff[0]=0;
+ memset((char*)gpsData,0,1000);
+__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
+HAL_UART_Receive_DMA(&huart2, gpsData, 900);
+__HAL_UART_CLEAR_IT(&huart1, UART_CLEAR_NEF|UART_CLEAR_OREF);
+HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
+initGPS();
+initFirstRun();
+InitMEMQ();
+HAL_Delay(10000);
+InitGSM();
+TestMEM();
 
+ memset(IMEI,0,20);
+ memset(Regno,0,20);
+strcpy(IMEI,GSMIMEI());
+ strcpy(Regno,readRegNo());
 
-
- 	  initAcc();
-	//TestDigitalOutput();
-	 SET_GPS_VCC_EN(1);
-		  	 	  SET_GSM_VCC_EN(1);
-		  	 	  SET_PWRKEY(1);
-		  	  Init_ADC();
-
-
-		  	  SET_5V_OUT_EN(1);
-		  	  SET_GPS_VCC_EN(1);
-		  	  SET_GSM_VCC_EN(1);
-		  	  SET_PWRKEY(1);
-		  	GSMBuff[0]=0;
-		      memset((char*)gpsData,0,1000);
-		  	  __HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
-		  	  HAL_UART_Receive_DMA(&huart2, gpsData, 900);
-
-		  	__HAL_UART_CLEAR_IT(&huart1, UART_CLEAR_NEF|UART_CLEAR_OREF);
-		  	HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
-		  	initGPS();
-		  	HAL_Delay(10000);
-
-
-		  //		  		   int nn=tic();
-		  		  			//HAL_Delay(3000);
-		  		  InitGSM();
-		  		//ResetTCP();
-		  		  //while(1){
-		    	//	ProcessTCPAll( "TEST DATA 111111111111111111111111");
-		  		//  }
-		//  		  		   toc(nn,"_________________________GSM INIT");
-
-
-		  	initFirstRun();
-		  	InitMEMQ();
-		  	/* GetLastAddress();
-
-		  	 initAcc();
-		  	 */
-		  	TestMEM();
-		  	StartTCPConnection();
-			  while (1){
-
-			 		  //HAL_UART_Receive_DMA(&huart2, gpsData, 900);
-			 			//HAL_GPIO_TogglePin(GPIOD, DO_LED_PWR_Pin);
-			 		 // int whiletotal=tic();
-				  //TestGPS();
-				  	  	// TestGSM();
-			 		  GSMSigQuality();
-			 			 TestRun();
-			 		  //toc(whiletotal,"_________________________While loop Total");
-
-
-
-			 	  }
+StartTCPConnection();
+while (1){
+    GSMSigQuality();
+	TestRun();
+}
   while(1)
   {
 	  	//
@@ -995,7 +971,7 @@ while(1){osDelay(1);
 
 
 
-
+/*
 	 // TestDigitalOutput();
 	  SET_5V_OUT_EN(1);
 	 	  SET_GPS_VCC_EN(1);
@@ -1084,7 +1060,7 @@ while(1){osDelay(1);
 
 
 
-
+*/
 
 	  /* USER CODE END 2 */
 
@@ -1142,8 +1118,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 
 
-void restartGSMuart(){GSMBuff[0]=0;
-__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
+void restartGSMuart(){GSMBuff[0]=0;__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
+
+__HAL_UART_CLEAR_IT(&huart1, UART_CLEAR_NEF|UART_CLEAR_OREF);
 HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
 
 }
@@ -1301,12 +1278,24 @@ void TestRun(){
 	//printInt(seqNo);
 
 
+	MAINS_STATE=Read_DI_MAINS_STATE();
+	ACC_STATE=Read_DI_ACC_STATE();
+	BOX_STATE=Read_DI_BOX_STATE();
+	SOS_STATE=Read_DI_SOS_STATE();
+	EXT_B=Read_EXT_B_SENSE();
+	INT_B=Read_INT_B_SENSE();
 
 
-	  memset(IMEI,0,20);
-	  memset(Regno,0,20);
-	  strcpy(IMEI,GSMIMEI());
-	  strcpy(Regno,readRegNo());
+	adc[0]=Read_ADC1();
+	adc[1]=Read_ADC2();
+	if(EXT_B>7){
+		SET_LED_PWR(1);
+	}
+	else{
+		SET_LED_PWR(0);
+	}
+
+
 
 memset(INSMSno,0,30);
 memset(OUTSMSno,0,30);
@@ -1320,9 +1309,11 @@ strcpy(OUTSMSno,readOUTSMSno());
 strcpy(EmgIP,readEmgIP());
 strcpy(RegIP,readRegIP());
 strcpy(TracIP,readTracIP());
+Debug_Tx("BEFORE SIM OP");
 strcpy(simop, GSMSimOperator());
-strcpy(simop, GSMSimOperator());
-strcpy(simop, GSMSimOperator());
+Debug_Tx("AFTER SIM OP");
+//strcpy(simop, GSMSimOperator());
+//strcpy(simop, GSMSimOperator());
 
 
 	//%%%%%%%    GSM Info Read    %%%%%%
@@ -1332,20 +1323,13 @@ strcpy(simop, GSMSimOperator());
 	toc(GSMinfoT,"_________________________While loop GSMinfo");
 
 
-
-
-
-	//%%%%%%%    Convert Numbers to string    %%%%%%
-
-
-
 	// %%%%%%%%%%%%%%%%%%%%%%%%%Create Protocall %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	GetHead();
 	//Debug_Tx(Head);
 
 
 
-	if (debug==1){
+	if (debug==122){
 		memset(DataString,0,300);
 		strcat(DataString,"Head:");
 		strcat(DataString,Head);strcat(DataString,"\nRegno:");
@@ -1603,8 +1587,8 @@ Debug_Tx("Error: LOW GSM Signal");
 	//%%%%%%%    Convert Numbers to string    %%%%%%
 	//strcpy(Dig_io, "----Dig io---\0");
 
-    sprintf(Dig_io, "%d%d%d0,%d%d,%d,0",Dig_in[0],Dig_in[1],Dig_in[2],Digout1,Digout2,seqNo);
-	sprintf(StatusStrng, "%d,%d,%f,%f,%d,%c",ACC_STATE,MAINS_STATE,EXT_B,INT_B,SOS_STATE,BOX_STATE);
+    sprintf(Dig_io, "%1d%1d%1d0,%1d%1d,%1d,0",Dig_in[0],Dig_in[1],Dig_in[2],Digout1,Digout2,seqNo);
+	sprintf(StatusStrng, "%1d,%1d,%3.1f,%3.1f,%1d,%c",ACC_STATE,MAINS_STATE,EXT_B,INT_B,SOS_STATE,BOX_STATE);
 
 
 

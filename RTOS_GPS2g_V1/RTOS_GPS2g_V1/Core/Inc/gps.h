@@ -84,7 +84,7 @@ void getGPSString(){
 
 
 
-	sprintf(gpsDataRet, "%d,%s,%s,%f,%s,%f,%s,%.1f,%.0f,%d,%.1f,%.2f,%.2f",
+	sprintf(gpsDataRet, "%1d,%10s,%10s,%10f,%1s,%10f,%1s,%5.1f,%3.0f,%2d,%4.1f,%6.2f,%6.2f",
 	    			GPSInfo.fix,GPSInfo.date,GPSInfo.time,GPSInfo.lat,GPSInfo.latD,GPSInfo.lon,GPSInfo.lonD,GPSInfo.speed,GPSInfo.head,GPSInfo.sat,GPSInfo.alt,GPSInfo.pdop,GPSInfo.hdop);
 }
 
@@ -103,7 +103,7 @@ float DegreeDecimalConvert(float ddmmmm){
 
 void printFlt(float x){
 	memset(printBuf,0,50);
-	snprintf(printBuf, 6, "%f", x);
+	snprintf(printBuf, 6, "%5.0f", x);
 	//gcvt(x, 6, buf);
 	Debug_Tx(printBuf);
 

@@ -311,13 +311,13 @@ void GetLastAddress() {
 	//Read data from the end of queue
 	//printAdd();
 
-	char str[20];
+	char str[30];
 
 
 	if((WrtAdd[0]==3) & (WrtAdd[1]==0)& (WrtAdd[1]==0)){
 		for(int i=0;i<60000;i++){
 			SPI_flash_Read_Data(WrtAdd , ReadMData ,5);
-			memset(str,0,20);
+			memset(str,0,30);
 			sprintf(str, "Add:%X-%X-%X  Data-%X-%X-%X",WrtAdd[0],WrtAdd[1],WrtAdd[2],ReadMData[0],ReadMData[1],ReadMData[2]);
 			Debug_Tx(str);
 			if(((ReadMData[0]<255) & (ReadMData[1]<255)& (ReadMData[2]<255)& (ReadMData[3]<255))&((ReadMData[0]>0) & (ReadMData[1]>0)& (ReadMData[2]>0)& (ReadMData[3]>0))){

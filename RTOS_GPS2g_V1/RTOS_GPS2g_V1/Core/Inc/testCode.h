@@ -136,10 +136,10 @@ void TestAnalogInput(){
 		char di[100];
 		char ADC11[10], ADC21[10], EXT_B_C1[10], INT_B_C1[10];
 
-    	snprintf( ADC11, 6, "%f", op[0]);
-    	snprintf( ADC21, 6, "%f", op[1]);
-    	snprintf( EXT_B_C1, 6, "%f", op[2]);
-    	snprintf( INT_B_C1, 6, "%f", op[3]);
+    	snprintf( ADC11, 6, "%3.1f", op[0]);
+    	snprintf( ADC21, 6, "%3.1f", op[1]);
+    	snprintf( EXT_B_C1, 6, "%3.1f", op[2]);
+    	snprintf( INT_B_C1, 6, "%3.1f", op[3]);
 	 	//  char StatusStrng[50];
 	 	//  sprintf(StatusStrng, "%d,%d,%s,%s,%d,%c",ACC_STATE,MAINS_STATE,EXT_B_C,INT_B_C,SOS_STATE,box);
 
