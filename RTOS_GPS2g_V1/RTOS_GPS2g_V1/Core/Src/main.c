@@ -925,16 +925,21 @@ void StartDefaultTask(void *argument)
 		  //		  		   int nn=tic();
 		  		  			//HAL_Delay(3000);
 		  		  InitGSM();
+		  		//ResetTCP();
+		  		  //while(1){
+		    	//	ProcessTCPAll( "TEST DATA 111111111111111111111111");
+		  		//  }
 		//  		  		   toc(nn,"_________________________GSM INIT");
 
 
-		  	//initFirstRun();
+		  	initFirstRun();
+		  	InitMEMQ();
 		  	/* GetLastAddress();
-		  	 InitMEMQ();
+
 		  	 initAcc();
 		  	 */
-
-
+		  	TestMEM();
+		  	StartTCPConnection();
 			  while (1){
 
 			 		  //HAL_UART_Receive_DMA(&huart2, gpsData, 900);
@@ -951,13 +956,13 @@ void StartDefaultTask(void *argument)
 			 	  }
   while(1)
   {
-	  	//TestMEM();
+	  	//
 	 // 	TestMEMQ();
 
   	//	 TestDigitalInput();
 	//  	 TestAnalogInput();
-		TestGPS();
-	  	 TestGSM();
+		//TestGPS();
+	  	// TestGSM();
 	//  	TestACC();
 	 // 	TestMEM();
 	   	//
@@ -1069,26 +1074,6 @@ while(1){osDelay(1);
 
 
 
-
-	  memset(IMEI,0,20);
-	  memset(Regno,0,20);
-	  memset(INSMSno,0,30);
-	  memset(OUTSMSno,0,30);
-	  memset(EmgIP,0,50);
-	  memset(RegIP,0,50);
-	  memset(TracIP,0,50);
-	  memset(simop,0,25);
-
-	  strcpy(IMEI,GSMIMEI());
-	  strcpy(Regno,readRegNo());
-	  strcpy(INSMSno,readINSMSno());
-	  strcpy(OUTSMSno,readOUTSMSno());
-	  strcpy(EmgIP,readEmgIP());
-	  strcpy(RegIP,readRegIP());
-	  strcpy(TracIP,readTracIP());
-	  strcpy(simop, GSMSimOperator());
-	  strcpy(simop, GSMSimOperator());
-	  strcpy(simop, GSMSimOperator());
 	  Debug_Tx("IMEI:");
 	  Debug_Tx(IMEI);
 	  Debug_Tx("RegNo:");
@@ -1162,10 +1147,10 @@ __HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
 HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
 
 }
-void initFirstRun(){
+void initFirstRun(){//20.210.207.21\",5001
 	ClearQueue();
 	writeConfig("AS-o1-A-9191\0","in sim no1234567891234in sim no\0","out sim no 123456789123456out sim no\0",
- 	  				  "216.10.243.86","216.10.243.86","216.10.243.86",
+ 	  				  "20.210.207.21","20.210.207.21","20.210.207.21",
 	  				  "oooooooootttttthheerrrrrrOtherdatadddaaatttttttttaaaaaaaaa\0");
 
 }
@@ -1318,6 +1303,26 @@ void TestRun(){
 
 
 
+	  memset(IMEI,0,20);
+	  memset(Regno,0,20);
+	  strcpy(IMEI,GSMIMEI());
+	  strcpy(Regno,readRegNo());
+
+memset(INSMSno,0,30);
+memset(OUTSMSno,0,30);
+memset(EmgIP,0,50);
+memset(RegIP,0,50);
+memset(TracIP,0,50);
+memset(simop,0,25);
+
+strcpy(INSMSno,readINSMSno());
+strcpy(OUTSMSno,readOUTSMSno());
+strcpy(EmgIP,readEmgIP());
+strcpy(RegIP,readRegIP());
+strcpy(TracIP,readTracIP());
+strcpy(simop, GSMSimOperator());
+strcpy(simop, GSMSimOperator());
+strcpy(simop, GSMSimOperator());
 
 
 	//%%%%%%%    GSM Info Read    %%%%%%
@@ -1351,8 +1356,22 @@ void TestRun(){
 		strcat(DataString,StatusStrng);strcat(DataString,"\nGsminfo:");
 		strcat(DataString,gsminfo);strcat(DataString,"\nDig_io:");
 		strcat(DataString,Dig_io);strcat(DataString,",\n\0");
-		//Debug_Tx(DataString);
+		Debug_Tx(DataString);
 	}
+	memset(data_LOGIN,0,100);
+	strcat(data_LOGIN,"$");
+	strcat(data_LOGIN,Regno);strcat(data_LOGIN,",");
+	strcat(data_LOGIN,"$");
+	strcat(data_LOGIN,IMEI);strcat(data_LOGIN,",");
+	strcat(data_LOGIN,"$");
+	strcat(data_LOGIN,VerStr);strcat(data_LOGIN,",");
+	strcat(data_LOGIN,"$");
+	strcat(data_LOGIN,VerStr);strcat(data_LOGIN,",0E0W,");
+	sprintf(checksum, "%02x",nmea0183_checksum(data_LOGIN));
+	strcat(data_LOGIN,checksum);
+	strcat(data_LOGIN,",*\0");
+
+    memset(checksum,0,3);
     memset(DataString,0,300);
 	strcat(DataString,Head);strcat(DataString,",");
 	strcat(DataString,IMEI);strcat(DataString,",");
@@ -1371,11 +1390,11 @@ void TestRun(){
 
 
     if (debug==1){
-    		Debug_Tx(DataString);
     }
     if(ServerConnected==1){
     	while(ReadQdata()>0){
-			ProcessTCPAll( ReadMDataS);
+			//
+    		ProcessTCPAll( ReadMDataS);
     	}
     	// %%%%%%%%%%%%%%%%%%%%%%%%Send Protocall %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     	int tcpsendT=tic();

@@ -70,8 +70,8 @@ all: main-build
 main-build: RTOS_GPSv1.elf secondary-outputs
 
 # Tool invocations
-RTOS_GPSv1.elf RTOS_GPSv1.map: $(OBJS) $(USER_OBJS) C:\Users\dell\Desktop\RTOS_GPS2g_V1\RTOS_GPS2g_V1\STM32G070CBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "RTOS_GPSv1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"C:\Users\dell\Desktop\RTOS_GPS2g_V1\RTOS_GPS2g_V1\STM32G070CBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RTOS_GPSv1.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
+RTOS_GPSv1.elf RTOS_GPSv1.map: $(OBJS) $(USER_OBJS) C:\Users\dell\Documents\GitHub\GPS2gRTOS\RTOS_GPS2g_V1\RTOS_GPS2g_V1\STM32G070CBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "RTOS_GPSv1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"C:\Users\dell\Documents\GitHub\GPS2gRTOS\RTOS_GPS2g_V1\RTOS_GPS2g_V1\STM32G070CBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RTOS_GPSv1.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

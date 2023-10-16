@@ -36,6 +36,8 @@ char GSMDData[3001];
 static uint8_t GSMBuff[1];
 char GSMDataC[100];
 
+char data_LOGIN[100];
+
 int gprsok=0;
 int debug=1;
 char GSMTXC[100];
@@ -60,8 +62,8 @@ char SS4[4],LAC4[6],CID4[6];
 int GSMProf=1;
 int FTPdnS=0;
 
-char ip[]="";//34.74.249.18\",300";
-char ip2[]="216.10.242.75\",6507"; //  "216.10.243.86\",6055";
+char ip[]="20.210.207.21\",5001";//34.74.249.18\",300";
+char ip2[]="20.210.207.21\",5001";//"216.10.242.75\",6507"; //  "216.10.243.86\",6055";
  // and port 
 
 int ServerConnected=0;
@@ -724,10 +726,15 @@ void StartTCPConnection(){
 		while((ck>0) && (gprsok<1)){
 			ck=ck-1;
 			SendGSMCode(GSMDataC);
+			//Debug_Tx(GetGSMReply(0,"",0,"","Error: AT+QIOPEN 0 TCP Connection open ",gpsto_net,"CONNECT OK"));
+
 			gprsok=strlen(GetGSMReply(0,"",0,"","Error: AT+QIOPEN 0 TCP Connection open ",gpsto_net,"CONNECT OK"));
 		}
+
 	}
 	HAL_Delay(1500);
+
+	/*
 	if(strlen(ip2)>4){
 		memset(GSMDataC,0,100);
 		strcpy(GSMDataC,(char*)" AT+QIOPEN=1,\"TCP\",\"");
@@ -739,8 +746,8 @@ void StartTCPConnection(){
 			SendGSMCode(GSMDataC);
 			gprsok=strlen(GetGSMReply(0,"",0,"","Error: AT+QIOPEN 1 TCP Connection open ",gpsto_net,"CONNECT OK"));
 		}
-	}
-	if (gprsok)	ServerConnected=1;
+	}*/
+	if (gprsok)	{Debug_Tx("connected ");ServerConnected=1;}
 	else ServerConnected=0;
 	HAL_Delay(500);
 }
@@ -763,11 +770,16 @@ void StopTCPConnection(){
 void SendTCPdata(char* data){
 	int ck=1;
 	if(gprsok>0){
+		Debug_Tx("GPRSOK");
 		if(strlen(ip)>4)
 		{
+
+			Debug_Tx("IPOK");
 		ck=1;
 		gprsok=0;
 		while((ck>0) && (gprsok<1)){
+
+			Debug_Tx("CONNECTING TO SEND");
 			ck=ck-1;
 			SendGSMCode(" AT+QISEND=0");
 			gprsok=strlen(GetGSMReply(0,"",0,"","Error: AT+QISEND Send TCP data input",gpsto_dev,">"));
@@ -777,13 +789,15 @@ void SendTCPdata(char* data){
 			gprsok=0;
 			while((ck>0) && (gprsok<1)){
 				ck=ck-1;
+				Debug_Tx("SENDINGDATA");
+				Debug_Tx(data);
 				SendGSMData(data);//Debug_Tx(GSMData);
 				gprsok=strlen(GetGSMReply(0,"",0,"","Error: AT+QISEND Send TCP data",gpsto_dev,"SEND OK"));
 
 			}
 		}
 		}
-		if(strlen(ip2)>4)
+		if(strlen(ip2)>44)
 		{
 		ck=1;
 		gprsok=0;
@@ -942,16 +956,25 @@ void ResetTCP(){
 
 void ProcessTCPAll( char* data){
 	int tcpSENDDATA=tic();
+
+
+
 	if(ServerConnected>0){
 		//$AS01FFA0138,$123456789012345,$1.0.4,$1.0.0,28.609803N077.103198E,F7,*
 
+		Debug_Tx("sending data to ip ");
+		Debug_Tx(ip2);
+		//SendTCPdata(data_LOGIN);
 		SendTCPdata(data);
 	}else{
 		if (debug==1){Debug_Tx("Error: ServerSession disconnected ");}
 
+		Debug_Tx("error insending data to ip ");
+		Debug_Tx(ip2);
 		ResetTCP();
 
 }
+
 
 
  	toc( tcpSENDDATA,"_________________________TCP SEND DATA");
