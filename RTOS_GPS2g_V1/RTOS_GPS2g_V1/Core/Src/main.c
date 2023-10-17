@@ -1275,7 +1275,7 @@ void TestRun(){
 
 
 
-	//printInt(seqNo);
+	printInt(seqNo);
 
 
 	MAINS_STATE=Read_DI_MAINS_STATE();
@@ -1309,9 +1309,9 @@ strcpy(OUTSMSno,readOUTSMSno());
 strcpy(EmgIP,readEmgIP());
 strcpy(RegIP,readRegIP());
 strcpy(TracIP,readTracIP());
-Debug_Tx("BEFORE SIM OP");
+//Debug_Tx("BEFORE SIM OP");
 strcpy(simop, GSMSimOperator());
-Debug_Tx("AFTER SIM OP");
+//Debug_Tx("AFTER SIM OP");
 //strcpy(simop, GSMSimOperator());
 //strcpy(simop, GSMSimOperator());
 
@@ -1586,6 +1586,7 @@ Debug_Tx("Error: LOW GSM Signal");
 
 	//%%%%%%%    Convert Numbers to string    %%%%%%
 	//strcpy(Dig_io, "----Dig io---\0");
+	printInt(seqNo);
 
     sprintf(Dig_io, "%1d%1d%1d0,%1d%1d,%1d,0",Dig_in[0],Dig_in[1],Dig_in[2],Digout1,Digout2,seqNo);
 	sprintf(StatusStrng, "%1d,%1d,%3.1f,%3.1f,%1d,%c",ACC_STATE,MAINS_STATE,EXT_B,INT_B,SOS_STATE,BOX_STATE);

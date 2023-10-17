@@ -35,6 +35,7 @@ char GSMData[1500];
 char GSMDData[3001];
 static uint8_t GSMBuff[1];
 char GSMDataC[100];
+char GSMReply3[500];
 
 char data_LOGIN[100];
 
@@ -62,8 +63,8 @@ char SS4[4], LAC4[6], CID4[6];
 int GSMProf = 1;
 int FTPdnS = 0;
 
-char ip[] = "216.10.242.75\",6507";	 // "20.210.207.21\",5001";//34.74.249.18\",300";216.10.242.75,PORT1-6507
-char ip2[] = "216.10.242.75\",6507"; // SS"20.210.207.21\",5001";//"216.10.242.75\",6507"; //  "216.10.243.86\",6055";
+char ip[] = "216.10.242.75\",6507"; //S"20.210.207.21\",5001";//"216.10.242.75\",6507";	 // "20.210.207.21\",5001";//34.74.249.18\",300";216.10.242.75,PORT1-6507
+char ip2[] = "";//"20.210.207.21\",5001";//"216.10.242.75\",6507"; // SS"20.210.207.21\",5001";//"216.10.242.75\",6507"; //  "216.10.243.86\",6055";
 									 // and port 
 
 int ServerConnected = 0;
@@ -401,6 +402,23 @@ void EndTransfer()
 	end[0] = 0x1A;
 	GSM_Tx((char *)end);
 	// return GSM_Rx();
+}
+int waitForResponse(const char* expectedResponse, int timeout) {
+	memset(GSMReply3, 0, 500);
+    uint16_t rxBufferIndex = 0;
+    int ret=0;
+
+	int stT = HAL_GetTick();
+	while (((HAL_GetTick() - stT) <= timeout)){
+        HAL_UART_Receive(&huart1, (uint8_t*)(GSMReply3 + rxBufferIndex), 1, HAL_MAX_DELAY);
+        rxBufferIndex++;
+
+        if (strstr(GSMReply3, expectedResponse) != NULL) {
+        	ret=1;
+            break;
+        }
+    }
+
 }
 
 char *GetGSMReply(int extra, const char *find, int gap, const char *LineEnd, const char *ErrorMsg, int timeout, const char *finChar)
@@ -749,9 +767,9 @@ void StartTCPConnection()
 			gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QIOPEN 0 TCP Connection open ", gpsto_net, "CONNECT OK"));
 		}
 	}
+
+
 	HAL_Delay(1500);
-	SendTCPdata(data_LOGIN);
-	/*
 	if(strlen(ip2)>4){
 		memset(GSMDataC,0,100);
 		strcpy(GSMDataC,(char*)" AT+QIOPEN=1,\"TCP\",\"");
@@ -763,14 +781,16 @@ void StartTCPConnection()
 			SendGSMCode(GSMDataC);
 			gprsok=strlen(GetGSMReply(0,"",0,"","Error: AT+QIOPEN 1 TCP Connection open ",gpsto_net,"CONNECT OK"));
 		}
-	}*/
+	}
 	if (gprsok)
 	{
-		Debug_Tx("connected ");
+		Debug_Tx("connected ip2 ");
 		ServerConnected = 1;
 	}
 	else
 		ServerConnected = 0;
+	HAL_Delay(1500);
+	SendTCPdata(data_LOGIN);
 	HAL_Delay(500);
 }
 void StopTCPConnection()
@@ -798,19 +818,21 @@ void SendTCPdata(char *data)
 	int ck = 1;
 	if (gprsok > 0)
 	{
-		Debug_Tx("GPRSOK");
+		//Debug_Tx("GPRSOK");
 		if (strlen(ip) > 4)
 		{
 
-			Debug_Tx("IPOK");
+			//Debug_Tx("IPOK");
 			ck = 1;
 			gprsok = 0;
 			while ((ck > 0) && (gprsok < 1))
 			{
-				Debug_Tx("CONNECTING TO SEND");
+				//Debug_Tx("CONNECTING TO SEND");
 				ck = ck - 1;
 				SendGSMCode(" AT+QISEND=0");
-				gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data input1", 4000, ">"));
+
+				gprsok = waitForResponse(">",1000);
+				//gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data input1", 4000, ">"));
 			}
 			if (gprsok > 0)
 			{
@@ -819,28 +841,77 @@ void SendTCPdata(char *data)
 				while ((ck > 0) && (gprsok < 1))
 				{
 					ck = ck - 1;
-					Debug_Tx("SENDINGDATA");
-					Debug_Tx(data);
+					//Debug_Tx("SENDINGDATA");
+
 					SendGSMData(data); // Debug_Tx(GSMData);
-					gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", gpsto_dev, "SEND OK"));
-				}
+					gprsok = waitForResponse("SEND OK",1000);//strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", 10*gpsto_dev, "SEND OK"));
+
+								}
+				if (gprsok<1){//SendGSMData("    ");
+				Debug_Tx("UNABLE TO11 SEND DATA STOPED CONNECTion");EndTransfer();
+}
+				else{Debug_Tx("DATASENT");Debug_Tx(data);}
+
 			}
 			else
 			{
 				SendGSMData("    ");
-				Debug_Tx("UNABLE TO SEND DATA STOPED CONNECTion");
+				Debug_Tx("UNABLE TO SEND11 DATA STOPED CONNECTion");
 				Debug_Tx(data);
+				EndTransfer();
+
 			}
 		}
-		if (strlen(ip2) > 44)
+		if (strlen(ip2) > 4)
 		{
+
+			//Debug_Tx("IPOK");
 			ck = 1;
+			gprsok = 0;
+			while ((ck > 0) && (gprsok < 1))
+			{
+				//Debug_Tx("CONNECTING TO SEND");
+				ck = ck - 1;
+				SendGSMCode(" AT+QISEND=1");
+
+				gprsok = waitForResponse(">",1000);
+				//gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data input1", 4000, ">"));
+			}
+			if (gprsok > 0)
+			{
+				ck = 1;
+				gprsok = 0;
+				while ((ck > 0) && (gprsok < 1))
+				{
+					ck = ck - 1;
+					//Debug_Tx("SENDINGDATA");
+
+					SendGSMData(data); // Debug_Tx(GSMData);
+					gprsok = waitForResponse("SEND OK",1000);//strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", 10*gpsto_dev, "SEND OK"));
+
+								}
+				if (gprsok<1){//SendGSMData("    ");
+				Debug_Tx("UNABLE TO22 SEND DATA STOPED CONNECTion");EndTransfer();
+}
+				else{Debug_Tx("DATASENT");Debug_Tx(data);}
+
+			}
+			else
+			{
+				SendGSMData("    ");
+				Debug_Tx("UNABLE TO 22SEND DATA STOPED CONNECTion");
+				Debug_Tx(data);
+				EndTransfer();
+
+			}
+
+			/*ck = 1;
 			gprsok = 0;
 			while ((ck > 0) && (gprsok < 1))
 			{
 				ck = ck - 1;
 				SendGSMCode(" AT+QISEND=1");
-				gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data input", gpsto_dev, ">"));
+				gprsok = waitForResponse(">",1000);//gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data input", gpsto_dev, ">"));
 			}
 			if (gprsok > 0)
 			{
@@ -852,7 +923,7 @@ void SendTCPdata(char *data)
 					SendGSMData(data); // Debug_Tx(GSMData);
 					gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", gpsto_dev, "SEND OK"));
 				}
-			}
+			}*/
 		}
 	}
 	else
@@ -1005,7 +1076,7 @@ char *SetTCPMux()
 
 void ResetTCP()
 {
-	EndTransfer();
+	//EndTransfer();
 	StopTCPConnection();
 	StartTCPConnection();
 }
@@ -1022,6 +1093,7 @@ void ProcessTCPAll(char *data)
 		Debug_Tx(ip2);
 		// SendTCPdata(data_LOGIN);
 		SendTCPdata(data);
+		Debug_Tx("dat send done  ");
 	}
 	else
 	{
@@ -1032,7 +1104,7 @@ void ProcessTCPAll(char *data)
 
 		Debug_Tx("error insending data to ip ");
 		Debug_Tx(ip2);
-		ResetTCP();
+		//ResetTCP();
 	}
 
 	toc(tcpSENDDATA, "_________________________TCP SEND DATA");
