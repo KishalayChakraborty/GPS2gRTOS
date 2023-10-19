@@ -418,6 +418,7 @@ int waitForResponse(const char* expectedResponse, int timeout) {
             break;
         }
     }
+	return ret;
 
 }
 
@@ -825,27 +826,33 @@ void SendTCPdata(char *data)
 			//Debug_Tx("IPOK");
 			ck = 1;
 			gprsok = 0;
-			while ((ck > 0) && (gprsok < 1))
+			//while ((ck > 0) && (gprsok < 1))
 			{
 				//Debug_Tx("CONNECTING TO SEND");
 				ck = ck - 1;
+
+				Debug_Tx("STUCKHERE CODE");
 				SendGSMCode(" AT+QISEND=0");
 
 				gprsok = waitForResponse(">",1000);
+
+				Debug_Tx("pass CODE");
 				//gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data input1", 4000, ">"));
 			}
 			if (gprsok > 0)
 			{
 				ck = 1;
 				gprsok = 0;
-				while ((ck > 0) && (gprsok < 1))
+				//while ((ck > 0) && (gprsok < 1))
 				{
 					ck = ck - 1;
 					//Debug_Tx("SENDINGDATA");
 
+					Debug_Tx("STUCKHERE data");
 					SendGSMData(data); // Debug_Tx(GSMData);
 					gprsok = waitForResponse("SEND OK",1000);//strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", 10*gpsto_dev, "SEND OK"));
 
+					Debug_Tx("pass DATA");
 								}
 				if (gprsok<1){//SendGSMData("    ");
 				Debug_Tx("UNABLE TO11 SEND DATA STOPED CONNECTion");EndTransfer();
@@ -868,7 +875,7 @@ void SendTCPdata(char *data)
 			//Debug_Tx("IPOK");
 			ck = 1;
 			gprsok = 0;
-			while ((ck > 0) && (gprsok < 1))
+			//while ((ck > 0) && (gprsok < 1))
 			{
 				//Debug_Tx("CONNECTING TO SEND");
 				ck = ck - 1;
@@ -881,7 +888,7 @@ void SendTCPdata(char *data)
 			{
 				ck = 1;
 				gprsok = 0;
-				while ((ck > 0) && (gprsok < 1))
+				//while ((ck > 0) && (gprsok < 1))
 				{
 					ck = ck - 1;
 					//Debug_Tx("SENDINGDATA");

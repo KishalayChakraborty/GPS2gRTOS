@@ -190,7 +190,7 @@ void TestMEM(){
 		SPI_flash_get_device_ID( );
 		//SPI_flash_get_device_ID(JEDEC_ID);
 		//ClearQueue();
-		writeConfig("AS-o1-A-9191\0","in sim no1234567891234in sim no\0","out sim no 123456789123456out sim no\0",
+		writeConfig("AS-o1-A-9000\0","in sim no1234567891234in sim no\0","out sim no 123456789123456out sim no\0",
 		 	  				  "216.10.243.86","216.10.243.86","216.10.243.86",
 			  				  "oooooooootttttthheerrrrrrOtherdatadddaaatttttttttaaaaaaaaa\0");
 

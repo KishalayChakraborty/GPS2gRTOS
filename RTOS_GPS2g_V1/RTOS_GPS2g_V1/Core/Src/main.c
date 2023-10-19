@@ -1126,7 +1126,7 @@ HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
 }
 void initFirstRun(){//20.210.207.21\",5001
 	ClearQueue();
-	writeConfig("AS-o1-A-9191\0","in sim no1234567891234in sim no\0","out sim no 123456789123456out sim no\0",
+	writeConfig("AS-o1-A-9222\0","in sim no1234567891234in sim no\0","out sim no 123456789123456out sim no\0",
  	  				  "20.210.207.21","20.210.207.21","20.210.207.21",
 	  				  "oooooooootttttthheerrrrrrOtherdatadddaaatttttttttaaaaaaaaa\0");
 
