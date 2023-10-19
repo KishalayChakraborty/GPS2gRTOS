@@ -60,10 +60,10 @@ char SS1[4], LAC1[6], CID1[6];
 char SS2[4], LAC2[6], CID2[6];
 char SS3[4], LAC3[6], CID3[6];
 char SS4[4], LAC4[6], CID4[6];
-int GSMProf = 1;
+int GSMProf = 0;
 int FTPdnS = 0;
 
-char ip[] = "216.10.242.75\",6507"; //S"20.210.207.21\",5001";//"216.10.242.75\",6507";	 // "20.210.207.21\",5001";//34.74.249.18\",300";216.10.242.75,PORT1-6507
+char ip[] ="216.10.242.75\",6507"; // "20.210.207.21\",5001";//"216.10.242.75\",6507"; //S"20.210.207.21\",5001";//"216.10.242.75\",6507";	 // "20.210.207.21\",5001";//34.74.249.18\",300";216.10.242.75,PORT1-6507
 char ip2[] = "";//"20.210.207.21\",5001";//"216.10.242.75\",6507"; // SS"20.210.207.21\",5001";//"216.10.242.75\",6507"; //  "216.10.243.86\",6055";
 									 // and port 
 
@@ -410,14 +410,15 @@ int waitForResponse(const char* expectedResponse, int timeout) {
 
 	int stT = HAL_GetTick();
 	while (((HAL_GetTick() - stT) <= timeout)){
-        HAL_UART_Receive(&huart1, (uint8_t*)(GSMReply3 + rxBufferIndex), 1, HAL_MAX_DELAY);
-        rxBufferIndex++;
-
-        if (strstr(GSMReply3, expectedResponse) != NULL) {
+		//HAL_UART_Receive(&huart1, (uint8_t*)(GSMReply3 + rxBufferIndex), 1, HAL_MAX_DELAY);
+        //rxBufferIndex++;
+		//strlen(GSMData)
+        if (strstr(GSMData, expectedResponse) != NULL) {
         	ret=1;
             break;
         }
     }
+	if(ret==0){Debug_Tx("gsm no reply timeout>>");Debug_Tx(GSMData);}
 	return ret;
 
 }
@@ -830,13 +831,9 @@ void SendTCPdata(char *data)
 			{
 				//Debug_Tx("CONNECTING TO SEND");
 				ck = ck - 1;
-
-				Debug_Tx("STUCKHERE CODE");
 				SendGSMCode(" AT+QISEND=0");
 
 				gprsok = waitForResponse(">",1000);
-
-				Debug_Tx("pass CODE");
 				//gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data input1", 4000, ">"));
 			}
 			if (gprsok > 0)
@@ -848,11 +845,9 @@ void SendTCPdata(char *data)
 					ck = ck - 1;
 					//Debug_Tx("SENDINGDATA");
 
-					Debug_Tx("STUCKHERE data");
 					SendGSMData(data); // Debug_Tx(GSMData);
 					gprsok = waitForResponse("SEND OK",1000);//strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", 10*gpsto_dev, "SEND OK"));
 
-					Debug_Tx("pass DATA");
 								}
 				if (gprsok<1){//SendGSMData("    ");
 				Debug_Tx("UNABLE TO11 SEND DATA STOPED CONNECTion");EndTransfer();
