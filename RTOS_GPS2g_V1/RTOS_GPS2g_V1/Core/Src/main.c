@@ -1158,7 +1158,7 @@ void ReadAllGPIO(){
 	memset(StatusStrng,0,20);
 	memset(Dig_io,0,30);
 
-    sprintf(Dig_io, "%d%d%d0,%d%d,%d,%.1f,%.1f,,()",Dig_in[0],Dig_in[1],Dig_in[2],Digout1,Digout2,seqNo,adc[0],adc[1]);
+    sprintf(Dig_io, "%d%d%d0,%d%d,%d,0.0,",Dig_in[0],Dig_in[1],Dig_in[2],Digout1,Digout2,seqNo);//Dig_io
 	sprintf(StatusStrng, "%d,%d,%.1f,%.1f,%d,%c",ACC_STATE,MAINS_STATE,EXT_B,INT_B,SOS_STATE,BOX_STATE);
 
 
@@ -1169,6 +1169,7 @@ void GetHead(){
 
 	memset(Head,0,100);
 	strcpy(Head,InitStr);
+	strcat(Head,",");
 	strcat(Head,VerStr);
 	if((EmergencyStateON==-1 )& (SOS_STATE==1 )){EmergencyStateON=1;EmergencyStateOFF=-1;}
 	if((EmergencyStateOFF==-1 )& (SOS_STATE==0) ){EmergencyStateOFF=1;EmergencyStateON=-1;}
@@ -1350,7 +1351,7 @@ strcpy(simop, GSMSimOperator());
 	strcat(data_LOGIN,"$");
 	strcat(data_LOGIN,VerStr);strcat(data_LOGIN,",");
 	strcat(data_LOGIN,"$");
-	strcat(data_LOGIN,VerStr);strcat(data_LOGIN,",0E0W,");
+	strcat(data_LOGIN,VerStr);strcat(data_LOGIN,",0.0E0.0N,");
 	sprintf(checksum, "%02x",nmea0183_checksum(data_LOGIN));
 	strcat(data_LOGIN,checksum);
 	strcat(data_LOGIN,",*\0");
@@ -1364,12 +1365,12 @@ strcpy(simop, GSMSimOperator());
 	strcat(DataString,simop);strcat(DataString,",");
  	strcat(DataString,StatusStrng);strcat(DataString,",");
  	strcat(DataString,gsminfo);strcat(DataString,",");
- 	strcat(DataString,Dig_io);strcat(DataString,"\0");
+ 	strcat(DataString,Dig_io);//strcat(DataString,"\0");
  	// %%%%%%%%%%%%%%%%%%%%%%%%%Add Checksum %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     sprintf(checksum, "%02x",nmea0183_checksum(DataString));
-    strcat(DataString,"*\0");
     strcat(DataString,checksum);
+    strcat(DataString,",*\0");
 
 
 
@@ -1597,6 +1598,7 @@ Debug_Tx("Error: LOW GSM Signal");
 
 	memset(Head,0,100);
 	strcpy(Head,InitStr);
+	strcat(Head,",");
 	strcat(Head,VerStr);
 
 	int HistoryPVTData=0;

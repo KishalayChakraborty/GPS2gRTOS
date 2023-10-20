@@ -84,7 +84,7 @@ void getGPSString(){
 
 
 
-	sprintf(gpsDataRet, "%1d,%10s,%10s,%10f,%1s,%10f,%1s,%5.1f,%3.0f,%2d,%4.1f,%6.2f,%6.2f",
+	sprintf(gpsDataRet, "%1d,%s,%s,%0.6f,%1s,%0.6f,%s,%0.1f,%0.2f,%d,%0.1f,%0.1f,%0.1f",
 	    			GPSInfo.fix,GPSInfo.date,GPSInfo.time,GPSInfo.lat,GPSInfo.latD,GPSInfo.lon,GPSInfo.lonD,GPSInfo.speed,GPSInfo.head,GPSInfo.sat,GPSInfo.alt,GPSInfo.pdop,GPSInfo.hdop);
 }
 

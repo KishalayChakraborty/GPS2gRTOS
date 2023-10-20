@@ -15,7 +15,7 @@
     float adc[2];
 	float EXT_B=0,INT_B=0;
 	char InitStr[]="$,T,ATMV\0"; //   "$,T,TGBT\0"
-	char VerStr[]=",1.0.0\0";
+	char VerStr[]="1.0.0\0";
 	char AlartStr_NormalPkt[]=",NR,01\0";
 	char AlartStr_HistoryPVTData[]=",NR,02\0";
 	char AlartStr_MainBatteryDisconnect[]=",BD,03\0";
