@@ -18,35 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "cmsis_os.h"
-
-#include <string.h>
-#include <math.h>
-
-
-
-
-ADC_HandleTypeDef hadc1;
-DMA_HandleTypeDef hdma_adc1;
-
-I2C_HandleTypeDef hi2c1;
-
-SPI_HandleTypeDef hspi1;
-
-TIM_HandleTypeDef htim6;
-
-UART_HandleTypeDef huart1;
-UART_HandleTypeDef huart2;
-UART_HandleTypeDef huart3;
-DMA_HandleTypeDef hdma_usart1_rx;
-DMA_HandleTypeDef hdma_usart2_rx;
-DMA_HandleTypeDef hdma_usart3_tx;
-
-static void Debug_Tx(char[]);
-static char* Debug_Rx(void);
-
-
-//#include "FOTA.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -85,32 +56,6 @@ DMA_HandleTypeDef hdma_usart1_rx;
 DMA_HandleTypeDef hdma_usart2_rx;
 DMA_HandleTypeDef hdma_usart3_tx;
 
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 16
-};
-/* Definitions for GPS_read */
-osThreadId_t GPS_readHandle;
-const osThreadAttr_t GPS_read_attributes = {
-  .name = "GPS_read",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 2
-};
-/* Definitions for StatusLED */
-osThreadId_t StatusLEDHandle;
-const osThreadAttr_t StatusLED_attributes = {
-  .name = "StatusLED",
-  .priority = (osPriority_t) osPriorityLow,
-  .stack_size = 128 * 4
-};
-/* Definitions for testQ */
-osMessageQueueId_t testQHandle;
-const osMessageQueueAttr_t testQ_attributes = {
-  .name = "testQ"
-};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -126,10 +71,6 @@ static void MX_TIM6_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART3_UART_Init(void);
-void StartDefaultTask(void *argument);
-void StartTask02(void *argument);
-void StartTask03(void *argument);
-
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -179,50 +120,6 @@ int main(void)
 
   /* USER CODE END 2 */
 
-  /* Init scheduler */
-  osKernelInitialize();
-
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
-
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
-
-  /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
-
-  /* Create the queue(s) */
-  /* creation of testQ */
-  testQHandle = osMessageQueueNew (16, sizeof(uint16_t), &testQ_attributes);
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
-
-  /* Create the thread(s) */
-  /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
-
-  /* creation of GPS_read */
-  GPS_readHandle = osThreadNew(StartTask02, NULL, &GPS_read_attributes);
-
-  /* creation of StatusLED */
-  StatusLEDHandle = osThreadNew(StartTask03, NULL, &StatusLED_attributes);
-
-  /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
-
-  /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
-
-  /* Start scheduler */
-  osKernelStart();
-  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -620,13 +517,13 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   /* DMA1_Channel2_3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
   /* DMA1_Ch4_7_DMAMUX1_OVR_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Ch4_7_DMAMUX1_OVR_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(DMA1_Ch4_7_DMAMUX1_OVR_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Ch4_7_DMAMUX1_OVR_IRQn);
 
 }
@@ -669,28 +566,15 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : DI_IN2_Pin DI_IN3_Pin DI_MAINS_STATE_Pin DI_ACC_STATE_Pin
-                            DI_INT1_ACCEL_Pin */
+                           DI_BOX_STATE_Pin DI_INT1_ACCEL_Pin */
   GPIO_InitStruct.Pin = DI_IN2_Pin|DI_IN3_Pin|DI_MAINS_STATE_Pin|DI_ACC_STATE_Pin
-                          | DI_INT1_ACCEL_Pin;
+                          |DI_BOX_STATE_Pin|DI_INT1_ACCEL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-
-  /*Configure GPIO pins :  DI_BOX_STATE_Pin  */
-  GPIO_InitStruct.Pin =  DI_BOX_STATE_Pin ;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;//GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : DI_SOS_STATE_Pin  */
-  GPIO_InitStruct.Pin = DI_SOS_STATE_Pin ;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;//GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins :  DI_IN1_Pin */
-  GPIO_InitStruct.Pin = DI_IN1_Pin;
+  /*Configure GPIO pins : DI_SOS_STATE_Pin DI_IN1_Pin */
+  GPIO_InitStruct.Pin = DI_SOS_STATE_Pin|DI_IN1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -724,107 +608,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
-
-
-
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
-{
-
-
-}
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-	{
-
-	  HAL_GPIO_TogglePin (GPIOD, DO_LED_GPS_Pin);
-	//Debug_Tx("V");
-	if(huart==&huart2){
-
-	}
-	if(huart==&huart1){
-
-
-	}
-	}
-
-}
-
-
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
-	if(huart==&huart2){
-
-
-	}
-	if(huart==&huart1){
-
-	}
-
-
-
-
-
-}
-
-
-
-/* USER CODE BEGIN Header_StartDefaultTask */
-/**
-  * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used
-  * @retval None
-  */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
-{
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-
-
-
-while (1){
- Debug_Tx("new app");
- HAL_Delay(2000);
-
-  }
-  /* USER CODE END 5 */
-}
-
-/* USER CODE BEGIN Header_StartTask02 */
-/**
-* @brief Function implementing the GPS_read thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask02 */
-void StartTask02(void *argument)
-{
-  /* USER CODE BEGIN StartTask02 */
-  /* Infinite loop */
-
-while(1){osDelay(1);
-	  }
-
-
-  /* USER CODE END StartTask02 */
-}
-
-/* USER CODE BEGIN Header_StartTask03 */
-/**
-* @brief Function implementing the StatusLED thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask03 */
-void StartTask03(void *argument)
-{
-  /* USER CODE BEGIN StartTask03 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask03 */
-}
-
 /**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM1 interrupt took place, inside
@@ -845,34 +628,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   /* USER CODE END Callback 1 */
 }
-
-
-
-
-
-
-
-static void Debug_Tx(char _out[]){
-
-	__HAL_UART_CLEAR_IT(&huart3, UART_CLEAR_NEF|UART_CLEAR_OREF);
-	HAL_UART_Transmit(&huart3, (uint8_t *) _out, strlen(_out), 5000);
-	char newline[2] = "\r\n";
-	HAL_UART_Transmit(&huart3, (uint8_t *) newline, 2, 10);
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
   * @brief  This function is executed in case of error occurrence.
