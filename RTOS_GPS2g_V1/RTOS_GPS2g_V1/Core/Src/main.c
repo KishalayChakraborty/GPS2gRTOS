@@ -925,10 +925,12 @@ TestMEM();
 strcpy(IMEI,GSMIMEI());
  strcpy(Regno,readRegNo());
 
-StartTCPConnection();
-while (1){
-    GSMSigQuality();
-	TestRun();
+
+
+//StartTCPConnection();
+while (1){DownloadFile();
+  //  GSMSigQuality();
+//	TestRun();
 }
   while(1)
   {

@@ -95,7 +95,7 @@ void build_decoding_table()
 		decoding_table[(unsigned char)encoding_table[i]] = i;
 }
 
-uint32_t StartPageAddress = 0x08010000;
+uint32_t StartPageAddress = 0x0801E000;
 uint32_t Flash_Write_Data(uint64_t Data)
 {
 	int sofar = 0;
@@ -131,7 +131,7 @@ int Flash_erase()
 {
 	HAL_FLASH_Unlock();
 	__HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGSERR);
-	for (int i = 30; i <= 63; i++)
+	for (int i = 60; i <= 63; i++)
 	{
 		// FLASH_Erase_Sector(i);0x08007000
 		// FLASH_PageErase(i);
@@ -257,8 +257,10 @@ int SendGSMCodeFOTA(const char cmd[])
 	strcpy(GSMTXC, cmd);
 	strcat(GSMTXC, "\r\n");
 	dnlfile = 1;
-	GSM_Tx(GSMTXC);
+	Debug_Tx("sending gsm download command and waiting ");
 	Debug_Tx(GSMTXC);
+	GSM_Tx(GSMTXC);
+	//
 	int try = 20;
 	while ((strstr(GSMData, "+QFTPGET:") == NULL) && try > 0)
 	{
@@ -266,6 +268,9 @@ int SendGSMCodeFOTA(const char cmd[])
 		try = try - 1;
 	}
 
+	HAL_Delay(1000);
+	Debug_Tx(GSMData);
+	Debug_Tx("Data read loop over");
 	if (strstr(GSMData, "+QFTPGET:") == NULL)
 	{
 
@@ -273,13 +278,15 @@ int SendGSMCodeFOTA(const char cmd[])
 		Debug_Tx(GSMData);
 		return 0;
 	}
+
+	Debug_Tx("incomplete check over");
 	if (strstr(GSMData, "END DOWNLOAD") != NULL)
 	{
 		if (FTPdnS > 0)
 		{
 			Debug_Tx(GSMDData);
 			Debug_Tx("data writing");
-			Flash_Write((uint8_t *)GSMDData);
+			//Flash_Write((uint8_t *)GSMDData);
 			Debug_Tx("data writing complete");
 		}
 
@@ -287,7 +294,8 @@ int SendGSMCodeFOTA(const char cmd[])
 		Debug_Tx(GSMData);
 		return 2;
 	}
-
+	Debug_Tx(GSMData);
+	Debug_Tx("complition check over");
 	char *pos = strstr(GSMData, "CONNECT");
 	pos = pos + 9;
 	strcpy(GSMData, pos);
@@ -298,6 +306,8 @@ int SendGSMCodeFOTA(const char cmd[])
 		GSMData[p - GSMData] = 0;
 
 	int j = 0;
+
+	Debug_Tx("loop2");
 	for (int i = 0; i < strlen(GSMData); i++)
 	{
 
@@ -315,6 +325,8 @@ int SendGSMCodeFOTA(const char cmd[])
 			// Debug_Tx("eeerrr");
 		}
 	}
+
+	Debug_Tx("loop2 ov");
 	GSMData[j] = 0;
 
 	if (FTPdnS == 0)
@@ -331,7 +343,7 @@ int SendGSMCodeFOTA(const char cmd[])
 	{
 		Debug_Tx(GSMDData);
 		Debug_Tx("data writing");
-		Flash_Write((uint8_t *)GSMDData);
+		//Flash_Write((uint8_t *)GSMDData);
 		Debug_Tx("data writing complete");
 		FTPdnS = 0;
 	}
@@ -592,38 +604,53 @@ int DownloadFile()
 		SendGSMCode(" AT+QFTPCFG=2,0");
 		if (strlen(GetGSMReply(0, "", 0, "", "Error:  AT+QFTPCFG set binery mode ", gpsto_net, "+QFTPCFG:0")) > 0)
 		{
+
+			//SendGSMCode(" AT+QFTPCFG=1,1");
+			//SendGSMCode(" AT+QFTPCFG=6,1");
 			Debug_Tx("*set Bin mode");
-			SendGSMCode(" AT+QFTPUSER=\"tom\"");
-			if (strlen(GetGSMReply(0, "", 0, "", "Error:  AT+QFTPUSER set ftp user ", gpsto_net, "OK")) > 0)
-			{
-				Debug_Tx("*set ftp user");
-				SendGSMCode(" AT+QFTPPASS=\"12121234\"");
-				if (strlen(GetGSMReply(0, "", 0, "", "Error:  AT+QFTPPASS set ftp pass ", gpsto_net, "OK")) > 0)
-				{
-					Debug_Tx("*ftp pass");
+			//SendGSMCode(" AT+QFTPCFG=\"35.185.111.158\",300,\"uuu\",\"qqqwwweee\"");
+			SendGSMCode(" AT+QFTPUSER=\"sammy\"");
+			if (waitForResponse("OK",4000)> 0)//if (strlen(GetGSMReply(0, "", 0, "", "Error:  AT+QFTPUSER set ftp user ", gpsto_net, "OK")) > 0)
+			{HAL_Delay(2000);
+
+			Debug_Tx(GSMReply);
+					Debug_Tx("*set ftp user");HAL_Delay(2000);HAL_Delay(2000);
+
+					Debug_Tx(GSMReply);
+				SendGSMCode(" AT+QFTPPASS=\"12345678\"\n");
+				if (waitForResponse("OK",6000)> 0)//AT+QFTPCFG
+				{ 	Debug_Tx(GSMReply);
+					Debug_Tx("*ftp pass");HAL_Delay(2000);
 					SendGSMCode(" AT+QFTPPATH=\"/\"");
 					if (strlen(GetGSMReply(0, "", 0, "", "Error:  AT+QFTPPATH set savepath ", gpsto_net, "+QFTPPATH: 0")) > 0)
 					{
 						Debug_Tx("*ftp path");
-						SendGSMCode(" AT+QFTPOPEN=\"34.74.249.18\",21");
+						SendGSMCode(" AT+QFTPOPEN=\"35.185.111.158\",21");
 						if (strlen(GetGSMReply(0, "", 0, "", "Error:  AT+QFTPOPEN open ip port ", gpsto_net, "+QFTPOPEN:0")) > 0)
 						{
 							Debug_Tx("*ftp portopen");
+							Debug_Tx(GSMReply);
 							char adrs[40];
 							Debug_Tx("**ClearingFlash");
-							Flash_erase();
+							//Flash_erase();
 							Debug_Tx("**flash clear done");
 							Debug_Tx("**get file");
 
+							SendGSMCode(" AT+QFTPLIST=\"/\"");
+							HAL_Delay(2000);
+							Debug_Tx("debug file list");
+										Debug_Tx(GSMReply);
 							rr = 1;
 							int g = 0;
 							int l = 1;
 							while (g != 2)
 							{
 								g = 0;
-								// sprintf(adrs, " AT+QFTPCFG=3,%d", l*1024);
+								//sprintf(adrs, " AT+QFTPCFG=3,%d", 1);
 								int try = 0;
-								sprintf(adrs, " AT+QFTPGET=\"/bin_%d.bin2en\"", l);
+								sprintf(adrs, "  AT+QFTPGET=\"/test.txt\"");//
+
+								//sprintf(adrs, " AT+QFTPGET=\"/bin_%d.bin2en\"", l);//
 								while (g == 0 && try < 2)
 								{
 									g = SendGSMCodeFOTA(adrs);
@@ -639,7 +666,10 @@ int DownloadFile()
 						}
 					}
 				}
-			}
+				Debug_Tx("debug");
+				Debug_Tx(GSMReply);
+			}Debug_Tx("debug");
+			Debug_Tx(GSMReply);
 		}
 	}
 	SendGSMCode(" AT+QFTPCLOSE");
