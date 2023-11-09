@@ -11,4 +11,4 @@
 ../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0/port.c:305:6:PendSV_Handler	0	static,ignoring_inline_asm
 ../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0/port.c:354:6:xPortSysTickHandler	8	static
 ../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0/port.c:375:30:vPortSetupTimerInterrupt	8	static
-../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0/port.c:214:12:xPortStartScheduler	8	static
+../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM0/port.c:214:12:xPortStartScheduler	24	static,ignoring_inline_asm

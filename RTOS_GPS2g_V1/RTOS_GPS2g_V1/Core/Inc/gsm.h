@@ -31,7 +31,7 @@ extern void toc(int tc, char Message[]);
 void SendTCPdata();
 void ResetTCP();
 char GSMInData[1000];
-char GSMData[1500];
+char GSMData[4500];
 char GSMDData[3001];
 static uint8_t GSMBuff[1];
 char GSMDataC[100];
@@ -63,7 +63,7 @@ char SS4[4], LAC4[6], CID4[6];
 int GSMProf = 1;//1 airtel, 0 bsnl
 int FTPdnS = 0;
 
-char ip[] ="20.210.207.21\",5001";//"216.10.242.75\",6507"; // "20.210.207.21\",5001";//"216.10.242.75\",6507"; //S"20.210.207.21\",5001";//"216.10.242.75\",6507";	 // "20.210.207.21\",5001";//34.74.249.18\",300";216.10.242.75,PORT1-6507
+char ip[] ="216.10.242.75\",6507"; //"20.210.207.21\",5001";// "20.210.207.21\",5001";//"216.10.242.75\",6507"; //S"20.210.207.21\",5001";//"216.10.242.75\",6507";	 // "20.210.207.21\",5001";//34.74.249.18\",300";216.10.242.75,PORT1-6507
 char ip2[] = "";//"20.210.207.21\",5001";//"216.10.242.75\",6507"; // SS"20.210.207.21\",5001";//"216.10.242.75\",6507"; //  "216.10.243.86\",6055";
 									 // and port 
 
@@ -593,7 +593,23 @@ char *GSMSimNo()
 	SendGSMCode(" AT+CCID");
 	return (GetGSMReply(0, "+CCID:", 8, "\"", "Error: AT+CCID Sim NO Read error", gpsto_dev, "OK"));
 }
+int DownloadChunkFTP(const char cmd[]){
+	Debug_Tx(cmd);
+	__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF | UART_CLEAR_OREF);
+	HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
+	memset(GSMData, 0, 4500);
+	dnlfile = 1;
+	GSM_Tx(cmd);
+	HAL_Delay(500);
+	int delay1=0;
+	while(delay1<100 && strlen(GSMData)<1024){
+		HAL_Delay(500);
+		delay1=delay1+1;
+	}
+	HAL_Delay(5000);
 
+	Debug_Tx(GSMData);
+}
 int DownloadFile()
 {
 	int rr = 0;
@@ -633,24 +649,37 @@ int DownloadFile()
 							char adrs[40];
 							Debug_Tx("**ClearingFlash");
 							//Flash_erase();
-							Debug_Tx("**flash clear done");
+							//Debug_Tx("**flash clear done");
 							Debug_Tx("**get file");
 
-							SendGSMCode(" AT+QFTPLIST=\"/\"");
+							//SendGSMCode(" AT+QFTPLIST=\"/\"");
 							HAL_Delay(2000);
-							Debug_Tx("debug file list");
-										Debug_Tx(GSMReply);
+							//Debug_Tx("debug file list");
+									//	Debug_Tx(GSMReply);
 							rr = 1;
 							int g = 0;
 							int l = 1;
-							while (g != 2)
+
+						int	sp=0			;
+						while (sp<10)//g != 2)
 							{
 								g = 0;
-								//sprintf(adrs, " AT+QFTPCFG=3,%d", 1);
+								sprintf(adrs, " len:%d",(sp));
+
+								Debug_Tx("cunk no ##################");
+								Debug_Tx(adrs);
+
+								//SendGSMCode(adrs);HAL_Delay(2000);
 								int try = 0;
-								sprintf(adrs, "  AT+QFTPGET=\"/test.txt\"");//
+								sprintf(adrs, "  AT+QFTPGET=\"/test%d.txt\"\r\n",sp);//
+
+								DownloadChunkFTP(adrs);
+
+
+								sp=sp+1;
 
 								//sprintf(adrs, " AT+QFTPGET=\"/bin_%d.bin2en\"", l);//
+								/*
 								while (g == 0 && try < 2)
 								{
 									g = SendGSMCodeFOTA(adrs);
@@ -660,7 +689,7 @@ int DownloadFile()
 								{
 									rr = 0;
 									break;
-								}
+								}*/
 								l = l + 1;
 							}
 						}

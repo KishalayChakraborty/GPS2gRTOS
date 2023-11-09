@@ -835,7 +835,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 		}
 	}
 	if(huart==&huart1){
-		if(strlen((char*)GSMData)<900){
+		if(strlen((char*)GSMData)<1900){
 		    if(GSMBuff[0]!=0)	strcat(GSMData,(char*)GSMBuff);
 		}
 
@@ -925,12 +925,13 @@ TestMEM();
 strcpy(IMEI,GSMIMEI());
  strcpy(Regno,readRegNo());
 
+ Debug_Tx("IMEI:");
+	  Debug_Tx(IMEI);
 
-
-//StartTCPConnection();
-while (1){DownloadFile();
-  //  GSMSigQuality();
-//	TestRun();
+StartTCPConnection();
+while (1){//DownloadFile();
+  GSMSigQuality();
+ TestRun();
 }
   while(1)
   {
@@ -1503,240 +1504,6 @@ static char* GSM_Rx(){
 
 
 
-
-
-
-void Run(){
-	if(errorlen>10){
-		Debug_Tx("GSMUART error rebooting device");
-		//NVIC_SystemReset();
-	}
-
-	gpsSt=0;
- 	TriggerGPS();
- 	int c=0;
- 	while(gpsSt<1){
- 		HAL_Delay(100);
- 		c++;
- 		if (c>50){break;}
- 	}
- 	//HAL_Delay(1500);
-
-
-
-    char gpsds[1000];
-	char gsminfo[200];
-	char simop[25];
-
-
-
-
-	memset(gpsds,0,100);
-	memset(gsminfo,0,200);
-	memset(StatusStrng,0,50);
-
-	//%%%%%%%    GPIO Read    %%%%%%
-	Dig_in[0]=Read_DI_IN1();
-	Dig_in[1]=Read_DI_IN2();
-	Dig_in[2]=Read_DI_IN3();
-
-
-	MAINS_STATE=Read_DI_MAINS_STATE();
-	ACC_STATE=Read_DI_ACC_STATE();
-	BOX_STATE=Read_DI_BOX_STATE();
-	SOS_STATE=Read_DI_SOS_STATE();
-	EXT_B=Read_EXT_B_SENSE();
-	INT_B=Read_INT_B_SENSE();
-
-
-	adc[0]=Read_ADC1();
-	adc[1]=Read_ADC2();
-	if(EXT_B>7){
-		SET_LED_PWR(1);
-	}
-	else{
-		SET_LED_PWR(0);
-	}
-
-
-	//%%%%%%%    AccGyro Read    %%%%%%
-
-
-
-	//%%%%%%%    GPS Read    %%%%%%
-	strcpy(gpsds,gpsDataRet);
-	//HAL_Delay(1000);
-
-
-
-
-Debug_Tx("Error: LOW GSM Signal");
-
-	//%%%%%%%    GSM Info Read    %%%%%%
-
-	strcpy(gsminfo,GSMCellInfo());
-	strcpy(simop, GSMSimOperator());
-	//Debug_Tx(gsminfo);
-	//strcpy(IMEI,"-----imei----\0");
-	//strcpy(gsminfo,"--cell info--\0");
-	//strcpy(simop, "-operator-\0");
-
-	//Debug_Tx(IMEI);
-	//Debug_Tx(Regno);
-	//strcpy(Regno, "--RegNO-\0");
-
-
-
-	//%%%%%%%    Convert Numbers to string    %%%%%%
-	//strcpy(Dig_io, "----Dig io---\0");
-	printInt(seqNo);
-
-    sprintf(Dig_io, "%1d%1d%1d0,%1d%1d,%1d,0",Dig_in[0],Dig_in[1],Dig_in[2],Digout1,Digout2,seqNo);
-	sprintf(StatusStrng, "%1d,%1d,%3.1f,%3.1f,%1d,%c",ACC_STATE,MAINS_STATE,EXT_B,INT_B,SOS_STATE,BOX_STATE);
-
-
-
-	// %%%%%%%%%%%%%%%%%%%%%%%%%Create Protocall %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-	memset(Head,0,100);
-	strcpy(Head,InitStr);
-	strcat(Head,",");
-	strcat(Head,VerStr);
-
-	int HistoryPVTData=0;
-	int HealthPacket=0;
-	int OTAParameterChange=0;
-
-	int EmergencyStateON=-1;
-	int EmergencyStateOFF=0;
-	int IgnitionTurnedON=0;
-	int IgnitionTurnedOFF=0;
-	int InternalBatterLow=0;
-	int InternalBatteryChargedAgain=0;
-	int MainBatteryDisconnect=0;
-	int MainBatteryReconnect=0;
-	int EmergencyWireBreak=0;
-
-
-	if((EmergencyStateON==-1 )& (SOS_STATE==1 )){EmergencyStateON=1;EmergencyStateOFF=-1;}
-	if((EmergencyStateOFF==-1 )& (SOS_STATE==0) ){EmergencyStateOFF=1;EmergencyStateON=-1;}
-	if((IgnitionTurnedON==-1 )&( MAINS_STATE==1 )){IgnitionTurnedON=1;IgnitionTurnedOFF=-1;}
-	if((IgnitionTurnedOFF==-1) &( MAINS_STATE==0 )){IgnitionTurnedOFF=1;IgnitionTurnedON=-1;}
-	if((InternalBatterLow==-1) & (INT_B<3.0 )){InternalBatterLow=1;InternalBatteryChargedAgain=-1;}
-	if((InternalBatteryChargedAgain==-1 )& (INT_B>=3.0)){InternalBatteryChargedAgain=1;InternalBatterLow=-1;}
-	if((MainBatteryDisconnect==-1 )& (INT_B<3.0 )){MainBatteryDisconnect=1;MainBatteryReconnect=-1;}
-	if((MainBatteryReconnect==-1 )& (INT_B>=3.0)){MainBatteryReconnect=1;MainBatteryDisconnect=-1;}
-
-	if(getSpeed()>SpeedThr){
-		strcat(Head,AlartStr_OverSpeed);
-	}
-	else if(EmergencyWireBreak>0){
-		strcat(Head,AlartStr_EmergencyWireBreak);
-		EmergencyWireBreak=0;
-	}
-	else if(AccGyroStatus==1){
-		strcat(Head,AlartStr_HarshAcceleration);
-	}
-
-	else if(AccGyroStatus==2){
-		strcat(Head,AlartStr_HarshBreaking);
-	}
-	else if(AccGyroStatus==3){
-		strcat(Head,AlartStr_RashTurning);
-	}
-	else if(EmergencyStateON>0){
-		strcat(Head,AlartStr_EmergencyStateON);
-		EmergencyStateON=0;
-	}
-	else if(EmergencyStateOFF>0){
-		strcat(Head,AlartStr_EmergencyStateOFF);
-		EmergencyStateOFF=0;
-	}
-	else if(IgnitionTurnedON>0){
-		strcat(Head,AlartStr_IgnitionTurnedON);
-		IgnitionTurnedON=0;
-	}
-	else if(IgnitionTurnedOFF>0){
-		strcat(Head,AlartStr_IgnitionTurnedOFF);
-		IgnitionTurnedOFF=0;
-	}
-	else if(BOX_STATE=='C'){
-		strcat(Head,AlartStr_BoxTemper);
-	}
-	else if(InternalBatterLow>0){
-		strcat(Head,AlartStr_InternalBatterLow);
-		InternalBatterLow=0;
-	}
-	else if(InternalBatteryChargedAgain>0){
-		strcat(Head,AlartStr_InternalBatteryChargedAgain);
-		InternalBatteryChargedAgain=0;
-	}
-	else if(MainBatteryDisconnect>0){
-		strcat(Head,AlartStr_MainBatteryDisconnect);
-		MainBatteryDisconnect=0;
-
-	}
-	else if(MainBatteryReconnect>0){
-		strcat(Head,AlartStr_MainBatteryReconnect);
-		MainBatteryReconnect=0;
-	}
-	else if(HistoryPVTData>0){
-		strcat(Head,AlartStr_HistoryPVTData);
-		HistoryPVTData=0;
-	}
-	else if(HealthPacket>0){
-		strcat(Head,AlartStr_HealthPacket);
-		HealthPacket=0;
-	}
-	else if(OTAParameterChange>0){
-		strcat(Head,AlartStr_OTAParameterChange);
-		OTAParameterChange=0;
-	}
-	else{
-		strcat(Head,AlartStr_NormalPkt);
-	}
-	strcat(Head,PacketStatusStrLive);
-	//Debug_Tx(Head);
-
-	if (debug==1){
-		memset(DataString,0,400);
-		strcat(DataString,"Head:");
-		strcat(DataString,Head);strcat(DataString,"\nRegno:");
-		strcat(DataString,Regno);strcat(DataString,"\nGPSDS:");
-		strcat(DataString,gpsds);strcat(DataString,"\nIMEI:");
-		strcat(DataString,IMEI);strcat(DataString,"\nSIMOP:");
-		strcat(DataString,simop);strcat(DataString,"\nStratusString:");
-		strcat(DataString,StatusStrng);strcat(DataString,"\nGsminfo:");
-		strcat(DataString,gsminfo);strcat(DataString,"\nDig_io:");
-		strcat(DataString,Dig_io);strcat(DataString,",\n\0");
-		Debug_Tx(DataString);
-	}
-    memset(DataString,0,400);
-	strcat(DataString,Head);strcat(DataString,",");
-	strcat(DataString,IMEI);strcat(DataString,",");
-	strcat(DataString,Regno);strcat(DataString,",");
-	strcat(DataString,gpsds);strcat(DataString,",");
-	strcat(DataString,simop);strcat(DataString,",");
- 	strcat(DataString,StatusStrng);strcat(DataString,",");
- 	strcat(DataString,gsminfo);strcat(DataString,",");
- 	strcat(DataString,Dig_io);strcat(DataString,",\0");
- 	// %%%%%%%%%%%%%%%%%%%%%%%%%Add Checksum %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    char checksum[3];
-    sprintf(checksum, "%02x",nmea0183_checksum(DataString));
-    strcat(DataString,checksum);strcat(DataString,",*\0");
-
-	// %%%%%%%%%%%%%%%%%%%%%%%%Send Protocall %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- 	Debug_Tx(DataString);
- 	//ProcessTCPAll(TracIP,"6055", DataString);
- 	ProcessTCPAll( DataString);
- 	//ProcessTCPAll("216.10.243.86","6055", DataString);
- 	//ProcessTCPAll("34.74.249.18","300", DataString);
- 	//ProcessTCPAll("34.74.249.18","300", DataString, "taisysnet");
- 	seqNo=seqNo+1;
- 	//HAL_Delay(2000);
-
-
-}
 
 
 
