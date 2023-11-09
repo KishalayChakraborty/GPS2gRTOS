@@ -63,7 +63,7 @@ char SS4[4], LAC4[6], CID4[6];
 int GSMProf = 1;//1 airtel, 0 bsnl
 int FTPdnS = 0;
 
-char ip[] ="20.210.207.21\",5001";//"216.10.242.75\",6507"; // "20.210.207.21\",5001";//"216.10.242.75\",6507"; //S"20.210.207.21\",5001";//"216.10.242.75\",6507";	 // "20.210.207.21\",5001";//34.74.249.18\",300";216.10.242.75,PORT1-6507
+char ip[] ="216.10.242.75\",6507"; //"20.210.207.21\",5001";//"216.10.242.75\",6507"; // "20.210.207.21\",5001";//"216.10.242.75\",6507"; //S"20.210.207.21\",5001";//"216.10.242.75\",6507";	 // "20.210.207.21\",5001";//34.74.249.18\",300";216.10.242.75,PORT1-6507
 char ip2[] = "";//"20.210.207.21\",5001";//"216.10.242.75\",6507"; // SS"20.210.207.21\",5001";//"216.10.242.75\",6507"; //  "216.10.243.86\",6055";
 									 // and port 
 
@@ -905,7 +905,7 @@ void SendTCPdata(char *data)
 					//Debug_Tx("SENDINGDATA");
 
 					SendGSMData(data); // Debug_Tx(GSMData);
-					gprsok = waitForResponse("SEND OK",1000);//strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", 10*gpsto_dev, "SEND OK"));
+					gprsok = waitForResponse("SEND OK",3000);//strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", 10*gpsto_dev, "SEND OK"));
 
 								}
 				if (gprsok<1){//SendGSMData("    ");
@@ -948,7 +948,7 @@ void SendTCPdata(char *data)
 					//Debug_Tx("SENDINGDATA");
 
 					SendGSMData(data); // Debug_Tx(GSMData);
-					gprsok = waitForResponse("SEND OK",1000);//strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", 10*gpsto_dev, "SEND OK"));
+					gprsok = waitForResponse("SEND OK",3000);//strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", 10*gpsto_dev, "SEND OK"));
 
 								}
 				if (gprsok<1){//SendGSMData("    ");
