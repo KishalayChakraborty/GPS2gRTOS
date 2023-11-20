@@ -928,7 +928,9 @@ strcpy(IMEI,GSMIMEI());
  Debug_Tx("IMEI:");
 	  Debug_Tx(IMEI);
 
-StartTCPConnection();
+	  //StartTCPConnection(0);
+	  //StartTCPConnection(1);
+	  //StartTCPConnection(2);
 while (1){//DownloadFile();
   GSMSigQuality();
  TestRun();
@@ -1163,7 +1165,8 @@ void ReadAllGPIO(){
 
     sprintf(Dig_io, "%d%d%d0,%d%d,%d,0.0,",Dig_in[0],Dig_in[1],Dig_in[2],Digout1,Digout2,seqNo);//Dig_io
 	sprintf(StatusStrng, "%d,%d,%.1f,%.1f,%d,%c",ACC_STATE,MAINS_STATE,EXT_B,INT_B,SOS_STATE,BOX_STATE);
-
+	//Debug_Tx("GPIO STATUS");
+	//Debug_Tx(StatusStrng);
 
 }
 
@@ -1174,6 +1177,7 @@ void GetHead(){
 	strcpy(Head,InitStr);
 	strcat(Head,",");
 	strcat(Head,VerStr);
+
 	if((EmergencyStateON==-1 )& (SOS_STATE==1 )){EmergencyStateON=1;EmergencyStateOFF=-1;}
 	if((EmergencyStateOFF==-1 )& (SOS_STATE==0) ){EmergencyStateOFF=1;EmergencyStateON=-1;}
 	if((IgnitionTurnedON==-1 )&( MAINS_STATE==1 )){IgnitionTurnedON=1;IgnitionTurnedOFF=-1;}
@@ -1202,13 +1206,13 @@ void GetHead(){
 	else if(AccGyroStatus==3){
 		strcat(Head,AlartStr_RashTurning);
 	}
-	else if(EmergencyStateON>0){
+	else if(EmergencyStateON==1){
 		strcat(Head,AlartStr_EmergencyStateON);
-		EmergencyStateON=0;
+		//EmergencyStateON=0;
 	}
-	else if(EmergencyStateOFF>0){
+	else if(EmergencyStateOFF==1){
 		strcat(Head,AlartStr_EmergencyStateOFF);
-		EmergencyStateOFF=0;
+		//EmergencyStateOFF=0;
 	}
 	else if(IgnitionTurnedON>0){
 		strcat(Head,AlartStr_IgnitionTurnedON);
@@ -1290,6 +1294,7 @@ void TestRun(){
 	INT_B=Read_INT_B_SENSE();
 
 
+	Debug_Tx("TEST1");
 	adc[0]=Read_ADC1();
 	adc[1]=Read_ADC2();
 	if(EXT_B>7){
@@ -1308,13 +1313,18 @@ memset(RegIP,0,50);
 memset(TracIP,0,50);
 memset(simop,0,25);
 
+Debug_Tx("TEST2");
 strcpy(INSMSno,readINSMSno());
 strcpy(OUTSMSno,readOUTSMSno());
+Debug_Tx("TEST2-1");
 strcpy(EmgIP,readEmgIP());
 strcpy(RegIP,readRegIP());
 strcpy(TracIP,readTracIP());
 //Debug_Tx("BEFORE SIM OP");
+Debug_Tx("TEST2-2");
 strcpy(simop, GSMSimOperator());
+
+Debug_Tx("TEST3");
 //Debug_Tx("AFTER SIM OP");
 //strcpy(simop, GSMSimOperator());
 //strcpy(simop, GSMSimOperator());
@@ -1324,14 +1334,14 @@ strcpy(simop, GSMSimOperator());
 	int GSMinfoT=tic();
 	GSMCellInfo();
 
-	toc(GSMinfoT,"_________________________While loop GSMinfo");
+	//toc(GSMinfoT,"_________________________While loop GSMinfo");
 
 
 	// %%%%%%%%%%%%%%%%%%%%%%%%%Create Protocall %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	GetHead();
-	//Debug_Tx(Head);
+	Debug_Tx("TEST4");
 
-
+/*
 
 	if (debug==122){
 		memset(DataString,0,300);
@@ -1345,7 +1355,36 @@ strcpy(simop, GSMSimOperator());
 		strcat(DataString,gsminfo);strcat(DataString,"\nDig_io:");
 		strcat(DataString,Dig_io);strcat(DataString,",\n\0");
 		Debug_Tx(DataString);
-	}
+	}**/
+	char v='V';
+	if (GPSInfo.fix>0)v='A';
+	sprintf(gpsDataRet2, "%s,%s,%c,%0.6f,%1s,%0.6f,%1s,%0.1f,%0.1f,%0.1f,G",GPSInfo.date,GPSInfo.time,v,GPSInfo.lat,GPSInfo.latD,GPSInfo.lon,GPSInfo.lonD,GPSInfo.alt,GPSInfo.speed,GPSInfo.head);
+
+
+	Debug_Tx("TEST5");
+	memset(DataString_em1,0,150);
+	strcat(DataString_em1,"$,EPB,EMR,");
+	strcat(DataString_em1,IMEI);strcat(DataString_em1,",NM,");
+	strcat(DataString_em1,gpsDataRet2);strcat(DataString_em1,",");
+	strcat(DataString_em1,Regno);strcat(DataString_em1,",0000000000,");
+	sprintf(checksum, "%02x",nmea0183_checksum(DataString_em1));
+	strcat(DataString_em1,checksum);
+	strcat(DataString_em1,",*\0");
+
+	memset(DataString_em2,0,150);
+	strcat(DataString_em2,"$,EPB,EMR,");
+	strcat(DataString_em2,IMEI);strcat(DataString_em2,",NM,");
+	strcat(DataString_em2,gpsDataRet2);strcat(DataString_em2,",");
+	strcat(DataString_em2,Regno);strcat(DataString_em2,",0000000000,");
+	sprintf(checksum, "%02x",nmea0183_checksum(DataString_em2));
+	strcat(DataString_em2,checksum);
+	strcat(DataString_em2,",*\0");
+
+	sprintf(gpsDataRet2, "%0.6f%1s%0.6f%1s", GPSInfo.lat,GPSInfo.latD,GPSInfo.lon,GPSInfo.lonD);
+
+
+	Debug_Tx("TEST6");
+
 	memset(data_LOGIN,0,100);
 	strcat(data_LOGIN,"$");
 	strcat(data_LOGIN,Regno);strcat(data_LOGIN,",");
@@ -1354,10 +1393,13 @@ strcpy(simop, GSMSimOperator());
 	strcat(data_LOGIN,"$");
 	strcat(data_LOGIN,VerStr);strcat(data_LOGIN,",");
 	strcat(data_LOGIN,"$");
-	strcat(data_LOGIN,VerStr);strcat(data_LOGIN,",0.0E0.0N,");
+	strcat(data_LOGIN,VerStr);strcat(data_LOGIN,",");strcat(data_LOGIN,gpsDataRet2);strcat(data_LOGIN,",");
 	sprintf(checksum, "%02x",nmea0183_checksum(data_LOGIN));
 	strcat(data_LOGIN,checksum);
 	strcat(data_LOGIN,",*\0");
+	//Debug_Tx("Login Packet Created");
+	//Debug_Tx(data_LOGIN);
+
 
     memset(checksum,0,3);
     memset(DataString,0,300);
@@ -1371,23 +1413,35 @@ strcpy(simop, GSMSimOperator());
  	strcat(DataString,Dig_io);//strcat(DataString,"\0");
  	// %%%%%%%%%%%%%%%%%%%%%%%%%Add Checksum %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+	Debug_Tx("TEST7");
     sprintf(checksum, "%02x",nmea0183_checksum(DataString));
     strcat(DataString,checksum);
     strcat(DataString,",*\0");
 
 
 
+
     if (debug==1){
     }
-    if(ServerConnected==1){
+
+	Debug_Tx("TEST8");
+    if(GSMSignal > 5) 		{
     	while(ReadQdata()>0){
 			//
-    		ProcessTCPAll( ReadMDataS);
+    		ProcessTCPAll( ReadMDataS,0);
     	}
     	// %%%%%%%%%%%%%%%%%%%%%%%%Send Protocall %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     	int tcpsendT=tic();
 
-     	ProcessTCPAll(DataString);
+     	ProcessTCPAll(DataString,0);
+     	if(EmergencyStateON==1 && EmergencyStateOFF==-1){
+         	ProcessTCPAll(DataString_em1,1);
+     	}
+     	if(EmergencyStateON==-1 && EmergencyStateOFF==1){
+         	ProcessTCPAll(DataString_em2,1);
+         	EmergencyStateOFF=0;
+         	//EmergencyStateON=0;
+     	}
      	toc( tcpsendT,"_________________________While loop tcp send data");
      	RunCnt=0;
     }
@@ -1406,13 +1460,14 @@ strcpy(simop, GSMSimOperator());
     }
 
 
+	Debug_Tx("TEST reloop1");
 	/*while(TimeDelay(TimeCount,5)==1){
 		HAL_Delay(10);
 		timedWork();
 
 	}
 	*/
-	TimeCount=tic();
+	//TimeCount=tic();
 
 
  	//ProcessTCPAll(TracIP,"6055", DataString);

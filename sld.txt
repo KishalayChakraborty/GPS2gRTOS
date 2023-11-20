@@ -1,0 +1,229 @@
+#define mode_sens_error 0
+#define mode_speed_low 1
+#define mode_speed_high 2
+#define mode_speed_abovemid 3
+
+/*
+Make sure the jumper is connected
+Raw PCB/PCB disconnected from power- no LED glow
+Firmware installed/ power connected to PCB: red light steady
+Sensor connected: Green light steady
+Sensor rotation/ vehicle is in motion: Green light blinking fast
+*/
+
+#include <EEPROM.h> 
+const int GO = 0;
+const int STOP = 1;
+
+int limit_low = 30;
+int limit_high = 250;
+int pulse = 0;
+int var = 0;
+long int t = 0;
+int mode = 0;
+float freq = 0;
+int avgLen = 16;
+String SensorState="NotConnected";
+long int cnt = 0;
+//int mode=0;
+
+
+const int in_pulse = 11;
+const int in_sensvelid = 1;
+const int in_sens_analog = 4;
+const int in_vol_analog = 5;
+const int out_sol = 8;
+const int led_red=3;
+const int led_green=2; 
+int led_green_stat=0; 
+String validdata="";
+int stop_pwm=0;
+int go_pwm=0;
+
+
+
+
+
+float getVol(int i){
+  float y=(i*0.25275) +0.4286;
+  stop_pwm=255;
+  go_pwm=int((0.092557*y*y)+(y*0.676767)-10.49767);//0.131194x2−0.601309x−1.06962;//int((3.72539*y)-31.3368);
+  if(go_pwm<0 or y<11.5)go_pwm=0;
+  return y;
+}
+
+
+void processstr(String datastr){
+  int dataIn;
+  datastr.trim(); 
+  Serial.println("Data::::"+datastr );
+  validdata=datastr;
+  if( datastr.length()<60){ 
+    int count = 0;
+    for (uint8_t i=0; i<datastr.length(); i++)
+      if (datastr[i] == '#') count++;
+    if( count==4){
+        int delimiter, delimiter_1, delimiter_2, delimiter_3;
+        delimiter = datastr.indexOf("#");
+        delimiter_1  = datastr.indexOf("#", delimiter + 1);
+        //delimiter_2 = datastr.indexOf("#", delimiter + 1);
+        //delimiter_2 = datastr.indexOf("#", delimiter_1 +1);
+        //delimiter_3 = datastr.indexOf("#", delimiter_2 +1);
+   
+        String freqstr = datastr.substring(delimiter + 1, delimiter_1);
+        //String sldid = datastr.substring(delimiter_1 + 1, delimiter_2);
+        //String setid = datastr.substring(delimiter_2 + 1, delimiter_3);
+      
+        dataIn=freqstr.toInt();
+  
+  
+        
+        if (dataIn > 0){      
+          limit_high = dataIn; 
+          int str1AddrOffset = writeStringToEEPROM(0, datastr);
+          Serial.println(datastr+ "done#");
+          validdata=datastr;
+          delay(100);
+        }
+      }
+    }
+}
+void setup()
+{
+  
+      
+    pinMode(in_pulse, INPUT);
+    pinMode(in_sensvelid, INPUT);
+    //pinMode(out_sol, OUTPUT); 
+    pinMode(led_red, OUTPUT);
+    pinMode(led_green, OUTPUT);
+    writeStringToEEPROM(0, "");
+    Serial.begin(9600);
+    t = millis(); 
+    String data;
+    int newStr1AddrOffset = readStringFromEEPROM(0, &data);
+    
+    if(data[0]!="#"){data="1#1#1#1#1#1#";}
+    analogWrite(out_sol, 255);
+    digitalWrite(led_red, 1);
+    digitalWrite(led_green, 0);
+    processstr(data);
+    mode=1;
+    String info1="";
+ 
+    //digitalWrite(out_sol, 105); 
+    //digitalWrite(led_red, 0);     
+    //delay(500);
+    //while(1)
+    {
+      info1="#####inp voltage"+String(analogRead(in_sens_analog))+"#####inp voltage"+String(getVol(analogRead(in_vol_analog)));
+      Serial.println(info1); 
+      
+      //digitalWrite(led_red, 1);
+      //analogWrite(out_sol, 55);
+     //delay(200);
+      //digitalWrite(led_red, 0);
+      //analogWrite(out_sol, 255);
+      //delay(2000);
+    
+      
+    }
+     
+    delay(500);
+    
+    
+      
+}
+ 
+void toggle_green(){
+  if(led_green_stat==0){led_green_stat=1;}
+  else{led_green_stat=0;}
+  digitalWrite(led_green, led_green_stat);
+  
+}
+void st_op(int set){
+  if(set==1){
+      //digitalWrite(out_sol, 1); 
+      analogWrite(out_sol, stop_pwm);
+    }
+    else{         
+      //digitalWrite(out_sol, 105);
+      analogWrite(out_sol, go_pwm);
+    }   
+}
+
+
+int writeStringToEEPROM(int addrOffset, const String &strToWrite)
+{
+  byte len = strToWrite.length();
+  EEPROM.write(addrOffset, len);
+  for (int i = 0; i < len; i++)
+  {
+    EEPROM.write(addrOffset + 1 + i, strToWrite[i]);
+  }
+  return addrOffset + 1 + len;
+}
+int readStringFromEEPROM(int addrOffset, String *strToRead)
+{
+  int newStrLen = EEPROM.read(addrOffset);
+  char data[newStrLen + 1];
+  for (int i = 0; i < newStrLen; i++)
+  {
+    data[i] = EEPROM.read(addrOffset + 1 + i);
+  }
+  data[newStrLen] = '\0'; 
+
+  *strToRead = String(data);
+  return addrOffset + 1 + newStrLen;
+}
+
+
+
+
+
+void loop(){
+  int sensV=0;
+  //blink_all(); 
+  if (Serial.available() > 0){
+    //int dataIn = Serial.readln();     
+    String datastr = Serial.readString();  //read until timeout      
+    processstr(datastr);     
+  }
+  freq=0;
+  float f=getVol(analogRead(in_vol_analog));
+
+  pulse = 0;
+  var = 0;
+  t=millis();
+  while((millis() - t)<500){        
+    if (digitalRead(in_pulse) > var){
+      var = 1;
+      pulse++;
+    }
+    if (digitalRead(in_pulse) == 0){
+      var = 0;
+    }
+  }
+  
+  if ( (analogRead(in_sens_analog)<5||analogRead(in_sens_analog)>500) && pulse<2){
+    SensorState="InvalidSensor";
+    sensV=0;
+    digitalWrite(led_green,0);    
+  }
+  else{
+    sensV=1;
+    SensorState="Connected";
+    digitalWrite(led_green,1);
+  }
+  if (pulse>1){toggle_green();}  
+
+  if (pulse< limit_high && sensV==1){ //pulse>0){
+    st_op(GO);
+  } 
+  else{
+    st_op(STOP);
+  }
+ 
+ Serial.println("#"+String(limit_high)+"#"+String(round(pulse))+"#"+SensorState+"#Fuel"+ validdata+"#" +String(analogRead(in_sens_analog))+"#inp voltage"+String(f)+"#gopwm"+String(go_pwm)); 
+ 
+}

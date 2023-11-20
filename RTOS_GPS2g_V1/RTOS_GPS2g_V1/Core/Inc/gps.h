@@ -40,6 +40,7 @@ struct GPS
 struct  GPS GPSInfo;
 static uint8_t gpsData[1000];
 char gpsDataRet[70];
+char  gpsDataRet2[70];
 char dd[10];
 char printBuf[50];
 
