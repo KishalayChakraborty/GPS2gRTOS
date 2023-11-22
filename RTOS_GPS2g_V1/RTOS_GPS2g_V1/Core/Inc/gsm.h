@@ -35,7 +35,7 @@ char GSMData[4500];
 char GSMDData[3001];
 static uint8_t GSMBuff[1];
 char GSMDataC[100];
-char GSMReply3[500];
+//char GSMReply3[500];
 
 char data_LOGIN[100];
 
@@ -119,6 +119,15 @@ uint32_t Flash_Write_Data(uint64_t Data)
 	HAL_FLASH_Lock();
 
 	return 0;
+}
+void Wait_gsmClear(int i){
+	while ((strlen(GSMData) > 0) && (i> 0))
+		{
+		memset(GSMData, 0, 4500);
+		HAL_Delay(2000);
+		i=i-1;
+		}
+
 }
 int Flash_Write(uint8_t *data)
 {
@@ -233,7 +242,7 @@ void RestartGSM()
 void SendGSMCode(const char cmd[])
 {
 
-	memset(GSMData, 0, 990);
+	memset(GSMData, 0, 4500);
 	__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF | UART_CLEAR_OREF);
 	HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
 	memset(GSMTXC, 0, 100);
@@ -256,7 +265,7 @@ int SendGSMCodeFOTA(const char cmd[])
 	memset(GSMData, 0, 1000);
 	// memset(GSMDData,0,3000);
 	memset(GSMTXC, 0, 100);
-	if ((strlen(cmd) > 90) & (debug == 1))
+	if ((strlen(cmd) > 90) && (debug == 1))
 	{
 		Debug_Tx("Error:GSM Code Length Exceed");
 	}
@@ -366,7 +375,7 @@ void SendGSMCodeD(const char cmd[])
 
 	__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF | UART_CLEAR_OREF);
 	HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
-	memset(GSMData, 0, 990);
+	memset(GSMData, 0, 4500);
 	GSM_Tx(cmd);
 	// return GSM_Rx();
 }
@@ -378,7 +387,7 @@ void SendGSMCodeL(const char cmd[])
 
 	memset(GSMData, 0, 990);
 	memset(GSMTXC, 0, 100);
-	if ((strlen(cmd) > 90) & (debug == 1))
+	if ((strlen(cmd) > 90) && (debug == 1))
 	{
 		Debug_Tx("Error:GSM Code Length Exceed");
 	}
@@ -395,7 +404,7 @@ void SendGSMData(const char data[])
 	__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF | UART_CLEAR_OREF);
 	HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
 
-	memset(GSMData, 0, 990);
+	memset(GSMData, 0, 4500);
 	uint8_t end[3];
 	memset(end, 0, 3);
 	end[0] = 0x1A;
@@ -422,7 +431,7 @@ void EndTransfer()
 	// return GSM_Rx();
 }
 int waitForResponse(const char* expectedResponse, int timeout) {
-	memset(GSMReply3, 0, 500);
+	//memset(GSMReply3, 0, 500);
     int ret=0;
 
 	int stT = HAL_GetTick();
@@ -444,12 +453,17 @@ char *GetGSMReply(int extra, const char *find, int gap, const char *LineEnd, con
 {
 	memset(GSMReply, 0, 100);
 	memset(GSMInData, 0, 1000);
+	gsmER=0;
 	int stT = HAL_GetTick();
 	while (((HAL_GetTick() - stT) <= timeout))
 	{
 		HAL_Delay(70);
-		if (strlen(GSMData) > 0)
+
+		///printInt(HAL_GetTick() - stT);
+		if (strlen(GSMData) > 0   )
 		{
+			if( strlen(GSMData) >900) {Debug_Tx("GSM Data oveload");HAL_Delay(5000);memset(GSMData, 0, 4500);
+			break;}
 			strcpy(GSMInData, GSMData);
 			char *pq = strstr(GSMInData, finChar);
 			if ((pq != NULL))
@@ -457,12 +471,18 @@ char *GetGSMReply(int extra, const char *find, int gap, const char *LineEnd, con
 
 				if ((strlen(find) < 1))
 				{ // Return for
+					if( strlen(pq) >95) {Debug_Tx("GSM Data oveload2");
+					HAL_Delay(5000);memset(GSMData, 0, 4500);
+								break;}
 					strcpy(GSMReply, pq);
 					break;
 				}
 				char *p = strstr(GSMInData, find);
 				if ((strlen(LineEnd) < 1))
 				{ // Return for
+					if( strlen(p) >95) {Debug_Tx("GSM Data oveload3");
+										HAL_Delay(5000);memset(GSMData, 0, 4500);
+													break;}
 					strcpy(GSMReply, p);
 					break;
 				}
@@ -474,7 +494,9 @@ char *GetGSMReply(int extra, const char *find, int gap, const char *LineEnd, con
 						{
 							char *p1 = strtok_r(p + gap, LineEnd, NULL); // strtok(GSMData, "\n");strtok(p+gap, );
 							if (strlen(p1) < 88)
-							{
+							{if( strlen(p1) >95) {Debug_Tx("GSM Data oveload4");
+							HAL_Delay(5000);memset(GSMData, 0, 4500);
+										break;}
 								strcpy(GSMReply, p1);
 								break;
 							}
@@ -493,24 +515,33 @@ char *GetGSMReply(int extra, const char *find, int gap, const char *LineEnd, con
 			}
 			gsmER = 0;
 		}
-		else
+		/*else
 		{
 			gsmER++;
-			if (gsmER > 9)
+			if (gsmER > 20)
 			{
-				RestartGSM();
-				restartGSMuart();
-				gsmER = 0;
-			}
-		}
-	}
+			//RestartGSM();
+			restartGSMuart();
 
-	// Debug_Tx(GSMInData);
+				Debug_Tx((char *)ErrorMsg);
+				Debug_Tx("No response from GSM; return Blank ");
+			gsmER = 0;
+			return "";
+			}
+		}*/
+	}
+	//Debug_Tx("****GSM REply");
+	//Debug_Tx(GSMInData);
+	//Debug_Tx("****gsmdata");
+	//Debug_Tx(GSMData);
+	//Debug_Tx("****gsmreply");
+	//Debug_Tx(GSMReply);
 	if (strlen(GSMReply) < 1)
 	{
-		Debug_Tx("****");
-		Debug_Tx(GSMInData);
+		//Debug_Tx("****");
 		Debug_Tx((char *)ErrorMsg);
+		Debug_Tx(GSMInData);
+		return "";
 	}
 	else
 	{
@@ -542,14 +573,13 @@ int GSMSigQuality()
 	}
 	else
 	{
-		Debug_Tx("GSM low");
 		Debug_Tx("GSM No Signal");
-		gprsok = 0;
+		//gprsok = 0;
 		//ServerConnected = 0;
-		if (0)
-			RestartGSM();
-		restartGSMuart();
-		Debug_Tx("GSMTRstarted");
+		//if (0)
+		//	RestartGSM();
+		//restartGSMuart();
+		//Debug_Tx("GSMTRstarted");
 		SET_LED_NET(0);
 	}
 	return (GSMSignal); // must be higher than 5 ,range 0-33
@@ -822,6 +852,9 @@ void StartTCPConnection(int n)
 	int ck = 1;
 	if (strlen(ip[n]) > 4)
 	{
+
+		SendGSMCode("AT+QISRVC=1");
+		HAL_Delay(1500);
 		memset(GSMDataC, 0, 100);
 		sprintf(GSMDataC, (char *)" AT+QIOPEN=%d,\"TCP\",\"",n);
 		strcat(GSMDataC,ip[n]);
@@ -831,11 +864,11 @@ void StartTCPConnection(int n)
 		{
 			ck = ck - 1;
 			SendGSMCode(GSMDataC);
-			gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QIOPEN 0 TCP Connection open ", gpsto_net, "CONNECT OK"));
+			gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QIOPEN TCP Connection open ", gpsto_net, "CONNECT OK"));
 		}
 		if(gprsok>0){
 			tcp_stat[n]=1;
-			//HAL_Delay(1500);
+			//
 			//SendTCPdata(data_LOGIN,n);
 			HAL_Delay(500);
 		}
@@ -864,7 +897,8 @@ void StopTCPConnection(int n)
 void SendTCPdata(char *data,int n)
 {
 	Debug_Tx("DATATOSEND:");Debug_Tx(data);
-	HAL_Delay(3000);
+	//HAL_Delay(10000);
+	Wait_gsmClear(10);
 
 	int ck = 1;
 	if (strlen(ip[n]) > 4)
@@ -878,9 +912,10 @@ void SendTCPdata(char *data,int n)
 			{
 				ck = ck - 1;
 
-				sprintf(GSMDataC, (char *)" AT+QISEND=%d",n);
+				sprintf(GSMDataC, (char *)" AT+QISEND=%d,%d",n,strlen(data)+1);
+				//memset(GSMData, 0, 4500);
 				SendGSMCode(GSMDataC);
-				gprsok = waitForResponse(">",3000);
+				gprsok = waitForResponse(">",9000);
 				//gprsok = strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data input1", 4000, ">"));
 			}
 			if (gprsok > 0)
@@ -890,33 +925,46 @@ void SendTCPdata(char *data,int n)
 				//while ((ck > 0) && (gprsok < 1))
 				{
 					ck = ck - 1;
+					//memset(GSMData, 0, 4500);
 					SendGSMData(data); // Debug_Tx(GSMData);
-					gprsok = waitForResponse("SEND OK",3000);//strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", 10*gpsto_dev, "SEND OK"));
+					gprsok = waitForResponse("SEND OK",18000);//strlen(GetGSMReply(0, "", 0, "", "Error: AT+QISEND Send TCP data", 10*gpsto_dev, "SEND OK"));
 
-								}
+				}
 				if (gprsok<1){
 					Debug_Tx("UNABLE TO get sending sending confermation from IP:");
+					Debug_Tx("****************************************************");
 					Debug_Tx(ip[n]);
+					Debug_Tx(GSMData);
+					Debug_Tx("****************************************************");
+
 
 					EndTransfer();
 				}
-				else{Debug_Tx("DATASENT"); }
+				else{Debug_Tx("DATASENT");
+				Wait_gsmClear(10);
+				}
 
 			}
 			else
 			{
 				//SendGSMData("    ");
 				Debug_Tx("UNABLE TO Connect for sending to IP:");
+				Debug_Tx("****************************************************");
 				Debug_Tx(ip[n]);
+				Debug_Tx(GSMData);
+				Debug_Tx("****************************************************");
 
-				HAL_Delay(5000);
+
 				EndTransfer();
-				HAL_Delay(10000);
+				HAL_Delay(5000);
+				Wait_gsmClear(10);
 
 				Debug_Tx("Resseting TCP connection");
 				Debug_Tx(ip[n]);
 				ResetTCP(n);
 			}
+			Wait_gsmClear(10);
+
 		}
 		else
 		{
@@ -925,6 +973,8 @@ void SendTCPdata(char *data,int n)
 			ResetTCP(n);
 		}
 	}
+
+
 
 }
 
@@ -976,7 +1026,7 @@ char *GSMCellInfo()
 	HAL_Delay(500);
 
 	char *m0 = strstr(GSMData, "+QENG: 0");
-	if ((m0 != NULL) & (strlen(m0) > 1))
+	if ((m0 != NULL) && (strlen(m0) > 1))
 	{
 
 		// Debug_Tx(m0);
@@ -999,10 +1049,10 @@ char *GSMCellInfo()
 	}
 	else
 	{
-		Debug_Tx("GSM tower data  Signal");
+		Debug_Tx("Error +QENG: 0 GSM tower data  Signal");
 	}
 	char *m1 = strstr(GSMData, "+QENG: 1");
-	if ((m1 != NULL) & (strlen(m1) > 1))
+	if ((m1 != NULL) && (strlen(m1) > 1))
 	{
 		// Debug_Tx(m1);
 		int k = 0;
@@ -1079,6 +1129,7 @@ void ResetTCP(int n)
 void ProcessTCPAll(char *data, int n)
 {
 	//int tcpSENDDATA = tic();
+
 
 	if (tcp_stat[n] > 0)
 	{

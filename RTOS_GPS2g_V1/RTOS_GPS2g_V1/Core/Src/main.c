@@ -835,8 +835,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 		}
 	}
 	if(huart==&huart1){
-		if(strlen((char*)GSMData)<1900){
+		if(strlen((char*)GSMData)<900){
 		    if(GSMBuff[0]!=0)	strcat(GSMData,(char*)GSMBuff);
+		}
+		else{
+			memset(GSMData, 0, 4500);
 		}
 
 
@@ -922,8 +925,10 @@ TestMEM();
 
  memset(IMEI,0,20);
  memset(Regno,0,20);
+ memset(simop,0,20);
 strcpy(IMEI,GSMIMEI());
  strcpy(Regno,readRegNo());
+ strcpy(simop, GSMSimOperator());
 
  Debug_Tx("IMEI:");
 	  Debug_Tx(IMEI);
@@ -1294,7 +1299,7 @@ void TestRun(){
 	INT_B=Read_INT_B_SENSE();
 
 
-	Debug_Tx("TEST1");
+	////Debug_Tx("TEST1");
 	adc[0]=Read_ADC1();
 	adc[1]=Read_ADC2();
 	if(EXT_B>7){
@@ -1311,20 +1316,20 @@ memset(OUTSMSno,0,30);
 memset(EmgIP,0,50);
 memset(RegIP,0,50);
 memset(TracIP,0,50);
-memset(simop,0,25);
 
-Debug_Tx("TEST2");
+//Debug_Tx("TEST2");
 strcpy(INSMSno,readINSMSno());
 strcpy(OUTSMSno,readOUTSMSno());
-Debug_Tx("TEST2-1");
+//Debug_Tx("TEST2-1");
 strcpy(EmgIP,readEmgIP());
 strcpy(RegIP,readRegIP());
 strcpy(TracIP,readTracIP());
 //Debug_Tx("BEFORE SIM OP");
-Debug_Tx("TEST2-2");
+//Debug_Tx("TEST2-2");
+memset(simop,0,25);
 strcpy(simop, GSMSimOperator());
 
-Debug_Tx("TEST3");
+//Debug_Tx("ST3");
 //Debug_Tx("AFTER SIM OP");
 //strcpy(simop, GSMSimOperator());
 //strcpy(simop, GSMSimOperator());
@@ -1339,7 +1344,7 @@ Debug_Tx("TEST3");
 
 	// %%%%%%%%%%%%%%%%%%%%%%%%%Create Protocall %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	GetHead();
-	Debug_Tx("TEST4");
+	//Debug_Tx("TEST4");
 
 /*
 
@@ -1361,7 +1366,7 @@ Debug_Tx("TEST3");
 	sprintf(gpsDataRet2, "%s,%s,%c,%0.6f,%1s,%0.6f,%1s,%0.1f,%0.1f,%0.1f,G",GPSInfo.date,GPSInfo.time,v,GPSInfo.lat,GPSInfo.latD,GPSInfo.lon,GPSInfo.lonD,GPSInfo.alt,GPSInfo.speed,GPSInfo.head);
 
 
-	Debug_Tx("TEST5");
+	//Debug_Tx("TEST5");
 	memset(DataString_em1,0,150);
 	strcat(DataString_em1,"$,EPB,EMR,");
 	strcat(DataString_em1,IMEI);strcat(DataString_em1,",NM,");
@@ -1383,7 +1388,7 @@ Debug_Tx("TEST3");
 	sprintf(gpsDataRet2, "%0.6f%1s%0.6f%1s", GPSInfo.lat,GPSInfo.latD,GPSInfo.lon,GPSInfo.lonD);
 
 
-	Debug_Tx("TEST6");
+	//Debug_Tx("TEST6");
 
 	memset(data_LOGIN,0,100);
 	strcat(data_LOGIN,"$");
@@ -1413,7 +1418,7 @@ Debug_Tx("TEST3");
  	strcat(DataString,Dig_io);//strcat(DataString,"\0");
  	// %%%%%%%%%%%%%%%%%%%%%%%%%Add Checksum %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-	Debug_Tx("TEST7");
+	//Debug_Tx("TEST7");
     sprintf(checksum, "%02x",nmea0183_checksum(DataString));
     strcat(DataString,checksum);
     strcat(DataString,",*\0");
@@ -1424,11 +1429,11 @@ Debug_Tx("TEST3");
     if (debug==1){
     }
 
-	Debug_Tx("TEST8");
+	//Debug_Tx("TEST8");
     if(GSMSignal > 5) 		{
     	while(ReadQdata()>0){
 			//
-    		ProcessTCPAll( ReadMDataS,0);
+    		//ProcessTCPAll( ReadMDataS,0);
     	}
     	// %%%%%%%%%%%%%%%%%%%%%%%%Send Protocall %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     	int tcpsendT=tic();
@@ -1442,7 +1447,7 @@ Debug_Tx("TEST3");
          	EmergencyStateOFF=0;
          	//EmergencyStateON=0;
      	}
-     	toc( tcpsendT,"_________________________While loop tcp send data");
+     	//toc( tcpsendT,"_________________________While loop tcp send data");
      	RunCnt=0;
     }
     else{
@@ -1460,7 +1465,7 @@ Debug_Tx("TEST3");
     }
 
 
-	Debug_Tx("TEST reloop1");
+	//Debug_Tx("TEST reloop1");
 	/*while(TimeDelay(TimeCount,5)==1){
 		HAL_Delay(10);
 		timedWork();
