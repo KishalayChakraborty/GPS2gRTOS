@@ -169,6 +169,7 @@ void StartDefaultTask(void *argument);
 void StartTask02(void *argument);
 void StartTask03(void *argument);
 
+char DatPrint[140];
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -822,9 +823,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 		if(dnlfile==0){
 		if(strlen((char*)gpsData)>10){
 
-	  		//Debug_Tx((char*)gpsData);
+	  		 //Debug_Tx((char*)gpsData);
 			ProcessGPS((char*)gpsData);
 			getGPSString();
+			//Debug_Tx(gpsDataRet);
 			timedWork();
 			ReadAllGPIO();
 		}
@@ -912,11 +914,16 @@ SET_GSM_VCC_EN(1);
 SET_PWRKEY(1);
 GSMBuff[0]=0;
  memset((char*)gpsData,0,1000);
-__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
-HAL_UART_Receive_DMA(&huart2, gpsData, 900);
-__HAL_UART_CLEAR_IT(&huart1, UART_CLEAR_NEF|UART_CLEAR_OREF);
-HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
+ restartGSMuart();
+
 initGPS();
+
+HAL_Delay(4000);
+/*while(1){
+	TestGPS();
+HAL_Delay(500);}
+*/
+
 initFirstRun();
 InitMEMQ();
 HAL_Delay(10000);
@@ -933,12 +940,28 @@ strcpy(IMEI,GSMIMEI());
  Debug_Tx("IMEI:");
 	  Debug_Tx(IMEI);
 
-	  //StartTCPConnection(0);
+	 // StartTCPConnection(0);
 	  //StartTCPConnection(1);
 	  //StartTCPConnection(2);
+	  int RunTime=tic();
+	  int rr=0;
+	  int t111=0;
 while (1){//DownloadFile();
+	rr=0;
+	while(rr<5000){
+		rr=tic()-RunTime;
+	}
+	RunTime=tic();
+		sprintf(DatPrint, "***************************************Time difference %d ",rr);
+	Debug_Tx(DatPrint);
+
+ t111=tic();
   GSMSigQuality();
+  sprintf(DatPrint, "**sigQ %d ",tic()-t111);
+  	Debug_Tx(DatPrint);
+t111=tic();
  TestRun();
+ sprintf(DatPrint, "**testRun %d ",tic()-t111);Debug_Tx(DatPrint);
 }
   while(1)
   {
@@ -979,98 +1002,6 @@ while(1){osDelay(1);
 
 
 
-
-
-/*
-	 // TestDigitalOutput();
-	  SET_5V_OUT_EN(1);
-	 	  SET_GPS_VCC_EN(1);
-	 	  SET_GSM_VCC_EN(1);
-	 	  SET_PWRKEY(1);
-	  		//  TestDigitalInput();
-	  		//  Init_ADC();
-	  		  //TestAnalogInput();
-	  		  initGPS();
-
-		  InitGSM();
-			HAL_Delay(10000);
-		  while (1){
-
-		 		  HAL_UART_Receive_DMA(&huart2, gpsData, 900);
-		 			HAL_GPIO_TogglePin(GPIOD, DO_LED_PWR_Pin);
-		 		  int whiletotal=tic();
-
-		 		  GSMSigQuality();
-		 			  TestRun();
-		 		  toc(whiletotal,"_________________________While loop Total");
-
-
-
-		 	  }
-	  while(1){
-
-		  TestGPS();
-
-		  TestGSM();
-		  initAcc();
-
-		  TestACC();
-		  GetLastAddress();
-		  InitMEMQ();
-		  TestMEM();
-		  //TestMEMQ();
-	  }
-	  initGPS();
-	  //GSM Init Block
-	    GSMBuff[0]=0;
-		__HAL_UART_CLEAR_IT(&huart1, UART_CLEAR_NEF|UART_CLEAR_OREF);
-		HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
-	    Debug_Tx("---------GSM init start");
-	   int nn=tic();
-		HAL_Delay(3000);
-	   InitGSM();
-	   toc(nn,"_________________________GSM INIT");
-
-
-	    memset((char*)gpsData,0,1000);
-		    __HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
-		    HAL_UART_Receive_DMA(&huart2, gpsData, 900);
-
-	  Debug_Tx("----------GSM init done");
-	  //END GSM Init Block
-
-
-	  // Memory init block
-	  initFirstRun();
-	  GetLastAddress();
-	  InitMEMQ();
-	  // END Memory init block
-
-
-
-
-
-
-	  initAcc();
-	  Init_ADC();
-
-
-
-		HAL_Delay(10000);
-
-
-
-	  Debug_Tx("IMEI:");
-	  Debug_Tx(IMEI);
-	  Debug_Tx("RegNo:");
-	  Debug_Tx(Regno);
-
-	  StartTCPConnection();
-	  gpsSt=0;
-
-
-
-*/
 
 	  /* USER CODE END 2 */
 
@@ -1128,10 +1059,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 
 
-void restartGSMuart(){GSMBuff[0]=0;__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
+void restartGSMuart(){
+	GSMBuff[0]=0;
+	__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
 
 __HAL_UART_CLEAR_IT(&huart1, UART_CLEAR_NEF|UART_CLEAR_OREF);
 HAL_UART_Receive_DMA(&huart1, GSMBuff, 1);
+
+HAL_UART_Receive_DMA(&huart2, gpsData, 900);
 
 }
 void initFirstRun(){//20.210.207.21\",5001
@@ -1279,12 +1214,13 @@ void GetHead(){
 void TestRun(){
 
 
+	int t222=0;//tic();
 
-	if(errorlen>10){
+	/*if(errorlen>10){
 		Debug_Tx("GSMUART error rebooting device");
 		NVIC_SystemReset();
 	}
-
+*/
 
 
 
@@ -1326,26 +1262,29 @@ strcpy(RegIP,readRegIP());
 strcpy(TracIP,readTracIP());
 //Debug_Tx("BEFORE SIM OP");
 //Debug_Tx("TEST2-2");
+
+//sprintf(DatPrint, "**init loop %d ",tic()-t222);Debug_Tx(DatPrint);
+t222=tic();
 memset(simop,0,25);
 strcpy(simop, GSMSimOperator());
 
-//Debug_Tx("ST3");
-//Debug_Tx("AFTER SIM OP");
-//strcpy(simop, GSMSimOperator());
-//strcpy(simop, GSMSimOperator());
+sprintf(DatPrint, "**simop loop %d ",tic()-t222);Debug_Tx(DatPrint);
+t222=tic();
 
 
 	//%%%%%%%    GSM Info Read    %%%%%%
-	int GSMinfoT=tic();
-	GSMCellInfo();
+	 GSMCellInfo();
 
+	sprintf(DatPrint, "**simcell info loop %d ",tic()-t222);Debug_Tx(DatPrint);
+	//t222=tic();
 	//toc(GSMinfoT,"_________________________While loop GSMinfo");
 
 
 	// %%%%%%%%%%%%%%%%%%%%%%%%%Create Protocall %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	GetHead();
-	//Debug_Tx("TEST4");
 
+	//sprintf(DatPrint, "**gethead info loop %d ",tic()-t222);Debug_Tx(DatPrint);
+	//t222=tic();
 /*
 
 	if (debug==122){
@@ -1424,30 +1363,40 @@ strcpy(simop, GSMSimOperator());
     strcat(DataString,",*\0");
 
 
+	//sprintf(DatPrint, "**makePotocal info loop %d ",tic()-t222);Debug_Tx(DatPrint);
+	//t222=tic();
 
 
-    if (debug==1){
-    }
 
 	//Debug_Tx("TEST8");
     if(GSMSignal > 5) 		{
+
     	while(ReadQdata()>0){
 			//
     		//ProcessTCPAll( ReadMDataS,0);
     	}
+
+    	//sprintf(DatPrint, "**memread loop %d ",tic()-t222);Debug_Tx(DatPrint);
+    	t222=tic();
     	// %%%%%%%%%%%%%%%%%%%%%%%%Send Protocall %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    	int tcpsendT=tic();
+
 
      	ProcessTCPAll(DataString,0);
+
+    	sprintf(DatPrint, "**send1 loop %d ",tic()-t222);Debug_Tx(DatPrint);
+    	t222=tic();
      	if(EmergencyStateON==1 && EmergencyStateOFF==-1){
          	ProcessTCPAll(DataString_em1,1);
      	}
+
      	if(EmergencyStateON==-1 && EmergencyStateOFF==1){
          	ProcessTCPAll(DataString_em2,1);
          	EmergencyStateOFF=0;
          	//EmergencyStateON=0;
      	}
-     	//toc( tcpsendT,"_________________________While loop tcp send data");
+
+    	sprintf(DatPrint, "**sendIm loop %d ",tic()-t222);Debug_Tx(DatPrint);
+    	//t222=tic();
      	RunCnt=0;
     }
     else{
@@ -1461,6 +1410,9 @@ strcpy(simop, GSMSimOperator());
     		RunCnt=0;
     	}
 
+
+    	//sprintf(DatPrint, "**Write queue loop %d ",tic()-t222);Debug_Tx(DatPrint);
+    	//t222=tic();
     	//HAL_Delay(5000);
     }
 
@@ -1480,6 +1432,8 @@ strcpy(simop, GSMSimOperator());
  	//ProcessTCPAll("34.74.249.18","300", DataString, "taisysnet");
 
  	seqNo=seqNo+1;
+
+	if(seqNo%5==0) {ResetTCP(0);ResetTCP(1);}
 
 
 }

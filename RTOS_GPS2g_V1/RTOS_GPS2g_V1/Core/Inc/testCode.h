@@ -157,7 +157,7 @@ void TestGPS(){
 	for(i=0;i<5;i++){
 		Debug_Tx(gpsDataRet);
 		HAL_UART_Receive_IT(&huart2, (uint8_t *)gpsData, 900);
-		//HAL_Delay(2000);
+		HAL_Delay(2000);
 	}
 }
 
@@ -190,7 +190,7 @@ void TestMEM(){
 		SPI_flash_get_device_ID( );
 		//SPI_flash_get_device_ID(JEDEC_ID);
 		//ClearQueue();
-		writeConfig("AS-o1-A-9000\0","in sim no1234567891234in sim no\0","out sim no 123456789123456out sim no\0",
+		writeConfig("L890000-0000\0","in sim no1234567891234in sim no\0","out sim no 123456789123456out sim no\0",
 		 	  				  "216.10.243.86","216.10.243.86","216.10.243.86",
 			  				  "oooooooootttttthheerrrrrrOtherdatadddaaatttttttttaaaaaaaaa\0");
 
