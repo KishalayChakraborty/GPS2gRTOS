@@ -22,7 +22,7 @@
 extern void SET_LED_GPS(int);
 
 
-//extern void GPS_Tx(const char*);
+extern void GPS_Tx(const char*);
 extern void Debug_Tx(char*);
 
 #include <assert.h>
@@ -48,7 +48,15 @@ char printBuf[50];
 //int ProcessRunning_GPS=0;
 
 void initGPS(){
-	//GPS_Tx("$PSTMSETCONSTMASK,1025\r\n\0");
+	GPS_Tx("$PSTMSETCONSTMASK,1024*25\r\n\0");//NAVIC
+	//GPS_Tx("$PSTMSETCONSTMASK,1*13\r\n\0");//GPS
+	//$PSTMSETCONSTMASK,1
+	//Enable GLONASS only:
+	//$PSTMSETCONSTMASK,2
+	//Enable GPS and GLONASS:
+	//$PSTMSETCONSTMASK,3
+	//Enable IRNSS:
+	//$PSTMSETCONSTMASK,1024
 
 
 	//GPS_Tx("$PSTMCFGTDATA,1964,3443,1,00000012\r\n\0");

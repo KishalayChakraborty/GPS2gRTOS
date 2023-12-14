@@ -67,7 +67,7 @@ DMA_HandleTypeDef hdma_usart3_tx;
 static void Debug_Tx(char[]);
 static char* Debug_Rx(void);
 static void GSM_Tx(const char[]);
-//static void GPS_Tx(const char[]);
+static void GPS_Tx(const char[]);
 static void GSM_TxL(const char[]);
 //static char* GSM_Rx(void);
 //static char* GSM_RxL(void);
@@ -768,7 +768,7 @@ static void MX_GPIO_Init(void)
 
 
 void timedWork(){
-	HAL_GPIO_TogglePin(GPIOD, DO_LED_GPS_Pin);
+	//HAL_GPIO_TogglePin(GPIOD, DO_LED_GPS_Pin);
 
 		//%%%%%%%    AccGyro Rest    %%%%%%
 	    if (AccGyroStatus1==0){AccGyroStatus=detectAcc();}
@@ -817,7 +817,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	{
 
-	  HAL_GPIO_TogglePin (GPIOD, DO_LED_GPS_Pin);
+	 // HAL_GPIO_TogglePin (GPIOD, DO_LED_GPS_Pin);
 	//Debug_Tx("V");
 	if(huart==&huart2){
 		if(dnlfile==0){
@@ -918,17 +918,12 @@ GSMBuff[0]=0;
 
 initGPS();
 
-HAL_Delay(4000);
-/*while(1){
-	TestGPS();
-HAL_Delay(500);}
-*/
-
 initFirstRun();
 InitMEMQ();
 HAL_Delay(10000);
 InitGSM();
 TestMEM();
+TestGSM();
 
  memset(IMEI,0,20);
  memset(Regno,0,20);
@@ -1478,7 +1473,6 @@ static void GSM_TxL(const char _out[]){
 
 
 
-/*
 static void GPS_Tx(const char _out[]){
 	__HAL_UART_CLEAR_IT(&huart2, UART_CLEAR_NEF|UART_CLEAR_OREF);
 	HAL_UART_Transmit(&huart2, (uint8_t *) _out, strlen(_out), 300);
@@ -1486,6 +1480,7 @@ static void GPS_Tx(const char _out[]){
 }
 
 
+/*s
 
 
 static char* GSM_RxL(){

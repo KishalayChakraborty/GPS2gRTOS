@@ -1431,7 +1431,7 @@ void ShiftGSMProfile()
 						ook = 0;
 						SendGSMCode(" AT+STKTR=\"810301240082028281830100900101\"");
 						ook = strlen(GetGSMReply(0, "", 0, "", "Error:  AT+STKTR=AIRTEL Config", gpsto_net, "OK"));
-						GSMProf = 0;
+						//GSMProf = 0;
 					}
 					if (ook > 0)
 					{
@@ -1558,7 +1558,7 @@ void InitGSM()
 								{
 
 									HAL_Delay(1000);
-									if (GSMProf == 0)
+									if (GSMProf == 1)
 									{
 										Debug_Tx("_____________AIRTEL APN SET_____________________________");
 										SetupGPRS("taisysnet"); // taisysnet");

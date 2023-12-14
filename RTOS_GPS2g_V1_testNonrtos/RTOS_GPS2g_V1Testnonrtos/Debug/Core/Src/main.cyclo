@@ -30,7 +30,7 @@
 ../Core/Inc/gsm.h:1320:5:sendSMS	2
 ../Core/Inc/gsm.h:1336:6:SetupGPRS	5
 ../Core/Inc/gsm.h:1384:6:ShiftGSMProfile	14
-../Core/Inc/gsm.h:1466:6:InitGSM	21
+../Core/Inc/gsm.h:1466:6:InitGSM	20
 ../Core/Src/main.c:102:7:stor	11
 ../Core/Src/main.c:135:6:HAL_UART_TxCpltCallback	1
 ../Core/Src/main.c:140:6:HAL_UART_RxCpltCallback	5

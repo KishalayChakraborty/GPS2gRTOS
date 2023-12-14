@@ -32,6 +32,7 @@ int ticT;
 int tocT;
 char tocTxt[30];
 char time1[10];
+char gpsDataRet3[100];
 int tic(){
 	return HAL_GetTick();
 }
@@ -161,6 +162,21 @@ void TestGPS(){
 	}
 }
 
+
+void TestGPS1(){
+	int i=0;
+	Debug_Tx("------------------Testing GPS:");
+	while(1){
+		sprintf(gpsDataRet3, "FIX:%1d,  DATE TIME:%s%s,  LAT;%0.6f%1s;   LON:%0.6f%s;  SPEED:%0.1f;  HEAD:%0.2f;  SATNO:%d ;  ALT:%0.1f",
+			    			GPSInfo.fix,GPSInfo.date,GPSInfo.time,GPSInfo.lat,GPSInfo.latD,GPSInfo.lon,GPSInfo.lonD,GPSInfo.speed,GPSInfo.head,GPSInfo.sat,GPSInfo.alt);
+
+		Debug_Tx(gpsDataRet3);
+		HAL_UART_Receive_IT(&huart2, (uint8_t *)gpsData, 900);
+		HAL_Delay(1000);
+	}
+}
+
+
 void TestGSM(){
 	Debug_Tx("------------------Testing AccGSM:");
 	Debug_Tx("GSM IMEI Data:");
@@ -177,9 +193,9 @@ void TestGSM(){
 void TestACC(){
 	int i=0;
 	Debug_Tx("------------------Testing AccGyro:");
-	for(i=0;i<10;i++){
+	while(1){
 		Debug_Tx(detectAccStr());
-		HAL_Delay(1000);
+		HAL_Delay(100);
 	}
 }
 
@@ -189,8 +205,8 @@ void TestMEM(){
 	for(i=0;i<1;i++){
 		SPI_flash_get_device_ID( );
 		//SPI_flash_get_device_ID(JEDEC_ID);
-		//ClearQueue();
-		writeConfig("L890000-0000\0","in sim no1234567891234in sim no\0","out sim no 123456789123456out sim no\0",
+		//ClearQueue();L89_003-0000,,,L89_001-0000   GEM1205-02-00s
+		writeConfig("L89_003-0000\0","in sim no1234567891234in sim no\0","out sim no 123456789123456out sim no\0",
 		 	  				  "216.10.243.86","216.10.243.86","216.10.243.86",
 			  				  "oooooooootttttthheerrrrrrOtherdatadddaaatttttttttaaaaaaaaa\0");
 
